@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Trello Clone avec Carte</title>
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="navbar">
+    <div class="navbar-brand">
+      <i class="fas fa-trello"></i>
+      Trello Clone
+    </div>
+
+    <div class="navbar-controls">
+      <div class="view-toggle">
+        <button id="btnViewBoard" class="active" onclick="switchView('board')">
+          <i class="fas fa-th"></i> Board
+        </button>
+        <button id="btnViewMap" onclick="switchView('map')">
+          <i class="fas fa-map"></i> Map
+        </button>
+      </div>
+
+      <button class="btn btn-primary" onclick="openAddListModal()">
+        <i class="fas fa-plus"></i> Ajouter une liste
+      </button>
+
+      <button class="btn btn-danger" onclick="deleteAllCards()">
+        <i class="fas fa-trash"></i> Supprimer toutes les cartes
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="board-section active" id="boardSection">
+      <div class="board-content" id="boardContent">
+        <div class="add-list-btn" onclick="openAddListModal()">
+          <i class="fas fa-plus"></i> Ajouter une liste
+        </div>
+      </div>
+    </div>
+
+    <div class="map-section" id="mapSection">
+      <div id="map"></div>
+      <div class="map-controls">
+        <input type="text" id="searchInput" placeholder="Rechercher un lieu...">
+        <button class="btn btn-primary" onclick="fitMapToMarkers(true)">
+          <i class="fas fa-crosshairs"></i> Recentrer sur les marqueurs
+        </button>
+        <button class="btn btn-secondary" onclick="clearMapMarkersOnly()">
+          <i class="fas fa-eraser"></i> Masquer les marqueurs (visuel)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add List Modal -->
+  <div class="modal" id="addListModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ajouter une liste</h2>
+        <button class="close-modal" onclick="closeAddListModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="listNameInput">Nom de la liste:</label>
+        <input type="text" id="listNameInput" placeholder="Entrez le nom de la liste">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="saveNewList()">Créer</button>
+        <button class="btn-cancel" onclick="closeAddListModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete List Modal -->
+  <div class="modal" id="deleteListModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Supprimer la liste</h2>
+        <button class="close-modal" onclick="closeDeleteListModal()">&times;</button>
+      </div>
+      <p id="deleteListMessage" style="margin-bottom: 20px;"></p>
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="moveCardsToArchives()">Déplacer vers Archives</button>
+        <button class="btn-danger" onclick="deleteCardsAndList()">Supprimer toutes les cartes</button>
+        <button class="btn-cancel" onclick="closeDeleteListModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Card Modal -->
+  <div class="modal" id="addCardModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="cardModalTitle">Ajouter une carte</h2>
+        <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label for="cardTitleInput">Titre de la carte:</label>
+        <input type="text" id="cardTitleInput" placeholder="Entrez le titre de la carte">
+      </div>
+
+      <div class="form-group">
+        <label for="cardDescriptionInput">Description:</label>
+        <textarea id="cardDescriptionInput" placeholder="Entrez la description"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Étiquettes:</label>
+        <div class="color-picker" id="labelPicker">
+          <div class="color-option" style="background-color:#FF6B6B" onclick="toggleColor(this,'#FF6B6B')"></div>
+          <div class="color-option" style="background-color:#FFA500" onclick="toggleColor(this,'#FFA500')"></div>
+          <div class="color-option" style="background-color:#FFD93D" onclick="toggleColor(this,'#FFD93D')"></div>
+          <div class="color-option" style="background-color:#6BCB77" onclick="toggleColor(this,'#6BCB77')"></div>
+          <div class="color-option" style="background-color:#4D96FF" onclick="toggleColor(this,'#4D96FF')"></div>
+          <div class="color-option" style="background-color:#9D4EDD" onclick="toggleColor(this,'#9D4EDD')"></div>
+          <div class="color-option" style="background-color:#FF006E" onclick="toggleColor(this,'#FF006E')"></div>
+          <div class="color-option" style="background-color:#00F5FF" onclick="toggleColor(this,'#00F5FF')"></div>
+        </div>
+      </div>
+
+      <div class="form-group form-group-relative">
+        <label for="cardAddressInput">Adresse (optionnel):</label>
+        <input type="text" id="cardAddressInput" placeholder="Entrez une adresse" autocomplete="off" oninput="searchAddress(this.value)">
+        <div id="addressAutocomplete" class="autocomplete-list" style="display:none;"></div>
+        <div id="addCardMiniMapContainer" style="display:none;">
+          <div id="addCardMiniMap"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="cardDueDateInput">Date d'échéance:</label>
+        <input type="date" id="cardDueDateInput">
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="saveNewCard()">Créer</button>
+        <button class="btn-cancel" onclick="closeAddCardModal()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Detail Modal -->
+  <div class="modal" id="cardDetailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="detailCardTitle">Détails de la carte</h2>
+        <div class="modal-header-actions">
+          <div class="dropdown" id="cardOptionsDropdown">
+            <button class="dropdown-toggle" onclick="toggleCardOptionsMenu()">
+              <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu" id="cardOptionsMenu">
+              <div class="dropdown-item dropdown-item-danger" onclick="deleteCard()">
+                <i class="fas fa-trash"></i> Supprimer la carte
+              </div>
+            </div>
+          </div>
+          <button class="close-modal" onclick="closeCardDetailModal()">&times;</button>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Titre</label>
+          <div class="card-detail-value" id="detailTitle" onclick="editCardField('title')"></div>
+          <input type="text" class="card-detail-input" id="detailTitleInput" style="display:none;" onkeydown="saveCardField(event,'title')">
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Description</label>
+          <div class="card-detail-value" id="detailDescription" onclick="editCardField('description')"></div>
+          <textarea class="card-detail-input" id="detailDescriptionInput" style="display:none;min-height:100px;"
+            onkeydown="saveCardField(event,'description')"
+            onblur="saveCardField({type:'blur'},'description')"></textarea>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Étiquettes</label>
+          <div class="card-detail-value" id="detailLabels" onclick="editCardField('labels')" style="flex-wrap:wrap;gap:5px;"></div>
+          <div id="detailLabelsInput" style="display:none;">
+            <div class="color-picker">
+              <div class="color-option" style="background-color:#FF6B6B" onclick="toggleDetailColor(this,'#FF6B6B')"></div>
+              <div class="color-option" style="background-color:#FFA500" onclick="toggleDetailColor(this,'#FFA500')"></div>
+              <div class="color-option" style="background-color:#FFD93D" onclick="toggleDetailColor(this,'#FFD93D')"></div>
+              <div class="color-option" style="background-color:#6BCB77" onclick="toggleDetailColor(this,'#6BCB77')"></div>
+              <div class="color-option" style="background-color:#4D96FF" onclick="toggleDetailColor(this,'#4D96FF')"></div>
+              <div class="color-option" style="background-color:#9D4EDD" onclick="toggleDetailColor(this,'#9D4EDD')"></div>
+              <div class="color-option" style="background-color:#FF006E" onclick="toggleDetailColor(this,'#FF006E')"></div>
+              <div class="color-option" style="background-color:#00F5FF" onclick="toggleDetailColor(this,'#00F5FF')"></div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:10px;width:100%;" onclick="saveCardField(null,'labels')">Valider</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Date d'échéance</label>
+          <div class="card-detail-value" id="detailDate" onclick="editCardField('dueDate')"></div>
+          <input type="date" class="card-detail-input" id="detailDateInput" style="display:none;"
+                 onkeydown="saveCardField(event,'dueDate')"
+                 onblur="saveCardField({type:'blur'},'dueDate')">
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Adresse</label>
+          <div class="card-detail-value" id="detailAddress" onclick="editCardField('address')" style="word-break:break-word;"></div>
+          <div class="form-group-relative">
+            <input type="text" class="card-detail-input" id="detailAddressInput" style="display:none;" autocomplete="off"
+                   onkeydown="saveCardField(event,'address')" oninput="searchDetailAddress(this.value)">
+            <div id="detailAddressAutocomplete" class="autocomplete-list" style="display:none;"></div>
+          </div>
+
+          <div id="detailMiniMapContainer" style="display:none;">
+            <div id="detailMiniMap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <label style="font-weight:700;color:#333;font-size:14px;">Checklist</label>
+        <div class="checklist-section" id="checklistContainer"></div>
+        <div class="add-checklist-item" onclick="addChecklistItem()">+ Ajouter un item</div>
+      </div>
+
+      <div class="card-detail-section">
+        <label style="font-weight:700;color:#333;font-size:14px;">Historique</label>
+        <div id="historyContainer" style="max-height:250px;overflow-y:auto;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- External JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
