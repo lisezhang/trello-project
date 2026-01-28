@@ -32,7 +32,7 @@ const STORAGE_MAP_VIEW = 'trelloMapView'; // {lat,lng,zoom}
 const DEFAULT_MAP_CENTER = [48.8566, 2.3522]; // Paris
 const DEFAULT_MAP_ZOOM = 6;
 const FIT_PADDING = [40, 40];
-const FIT_MAX_ZOOM = 14;
+const FIT_MAX_ZOOM = 8;
 
 // Track marker count for fitBounds trigger
 let lastMarkerCount = 0;
