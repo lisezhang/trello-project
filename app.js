@@ -342,8 +342,11 @@ function deleteCardsAndList() {
 // -------------------------
 // Modals - cards
 // -------------------------
+let addCardChecklist = []; // Temporary checklist for new card
+
 function openAddCardModal() {
   selectedLabels = [];
+  addCardChecklist = [];
   document.getElementById('cardModalTitle').textContent = 'Ajouter une carte';
   document.getElementById('cardTitleInput').value = '';
   document.getElementById('cardDescriptionInput').value = '';
@@ -352,6 +355,7 @@ function openAddCardModal() {
   document.querySelectorAll('#labelPicker .color-option').forEach(el => el.classList.remove('selected'));
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
+  document.getElementById('addCardChecklistContainer').innerHTML = '';
   window.currentAddressCoordinates = null;
 
   document.getElementById('addCardModal').classList.add('show');
@@ -362,6 +366,7 @@ function closeAddCardModal() {
   document.getElementById('addCardModal').classList.remove('show');
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
+  addCardChecklist = [];
 }
 
 function toggleColor(element, color) {
@@ -369,6 +374,49 @@ function toggleColor(element, color) {
   const idx = selectedLabels.indexOf(color);
   if (idx > -1) selectedLabels.splice(idx, 1);
   else selectedLabels.push(color);
+}
+
+function addCardChecklistItem() {
+  const text = prompt("Entrez l'item de la checklist:");
+  if (!text || !text.trim()) return;
+
+  addCardChecklist.push({ text: text.trim(), completed: false });
+  renderAddCardChecklist();
+}
+
+function renderAddCardChecklist() {
+  const container = document.getElementById('addCardChecklistContainer');
+  container.innerHTML = '';
+
+  addCardChecklist.forEach((item, index) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'checklist-item';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = !!item.completed;
+    checkbox.onchange = () => {
+      item.completed = checkbox.checked;
+      renderAddCardChecklist();
+    };
+
+    const text = document.createElement('div');
+    text.className = 'checklist-item-text';
+    text.textContent = item.text;
+
+    const del = document.createElement('button');
+    del.className = 'checklist-item-delete';
+    del.textContent = 'Supprimer';
+    del.onclick = () => {
+      addCardChecklist.splice(index, 1);
+      renderAddCardChecklist();
+    };
+
+    itemDiv.appendChild(checkbox);
+    itemDiv.appendChild(text);
+    itemDiv.appendChild(del);
+    container.appendChild(itemDiv);
+  });
 }
 
 function saveNewCard() {
@@ -380,17 +428,18 @@ function saveNewCard() {
     listId: currentListId,
     title,
     description: document.getElementById('cardDescriptionInput').value,
-    labels: selectedLabels,
+    labels: [...selectedLabels],
     address: document.getElementById('cardAddressInput').value.trim(),
     coordinates: window.currentAddressCoordinates || null,
     dueDate: document.getElementById('cardDueDateInput').value,
-    checklist: [],
+    checklist: [...addCardChecklist],
     history: [{ action: 'Carte créée', timestamp: new Date().toLocaleString('fr-FR') }],
     createdAt: new Date().toLocaleString('fr-FR')
   };
 
   cards.push(newCard);
   window.currentAddressCoordinates = null;
+  addCardChecklist = [];
 
   saveData();
   renderBoard();
@@ -449,6 +498,15 @@ function toggleCardOptionsMenu() {
 
 function closeCardOptionsMenu() {
   document.getElementById('cardOptionsMenu').classList.remove('show');
+}
+
+function toggleNavbarOptionsMenu() {
+  const menu = document.getElementById('navbarOptionsMenu');
+  menu.classList.toggle('show');
+}
+
+function closeNavbarOptionsMenu() {
+  document.getElementById('navbarOptionsMenu').classList.remove('show');
 }
 
 function renderDetailLabels(card) {
@@ -1110,10 +1168,15 @@ window.onmousedown = (event) => {
 };
 
 window.onmouseup = (event) => {
-  // Close dropdown menu if clicking outside of it
-  const dropdown = document.getElementById('cardOptionsDropdown');
-  if (dropdown && !dropdown.contains(event.target)) {
+  // Close dropdown menus if clicking outside of them
+  const cardDropdown = document.getElementById('cardOptionsDropdown');
+  if (cardDropdown && !cardDropdown.contains(event.target)) {
     closeCardOptionsMenu();
+  }
+
+  const navbarDropdown = document.getElementById('navbarOptionsDropdown');
+  if (navbarDropdown && !navbarDropdown.contains(event.target)) {
+    closeNavbarOptionsMenu();
   }
 
   // Only close modal if mousedown AND mouseup both happened on the modal backdrop
