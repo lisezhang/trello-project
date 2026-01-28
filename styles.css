@@ -700,20 +700,31 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .container {
-    flex-direction: column;
+  .navbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
   }
 
-  .board-content {
-    flex-direction: column;
+  .navbar-brand {
+    font-size: 20px;
+  }
+
+  .navbar-brand span {
+    display: none;
+  }
+
+  .navbar-controls {
+    gap: 10px;
   }
 
   .list-container {
-    min-width: 100%;
-    max-width: 100%;
+    min-width: 260px;
+    max-width: 260px;
   }
 
   .modal-content {
     max-width: 95%;
+    padding: 20px;
   }
 }

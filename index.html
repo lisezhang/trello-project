@@ -17,7 +17,7 @@
   <div class="navbar">
     <div class="navbar-brand">
       <i class="fas fa-trello"></i>
-      Trello Clone
+      <span>Trello Clone</span>
     </div>
 
     <div class="navbar-controls">
@@ -30,13 +30,16 @@
         </button>
       </div>
 
-      <button class="btn btn-primary" onclick="openAddListModal()">
-        <i class="fas fa-plus"></i> Ajouter une liste
-      </button>
-
-      <button class="btn btn-danger" onclick="deleteAllCards()">
-        <i class="fas fa-trash"></i> Supprimer toutes les cartes
-      </button>
+      <div class="dropdown" id="navbarOptionsDropdown">
+        <button class="dropdown-toggle" onclick="toggleNavbarOptionsMenu()">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="dropdown-menu" id="navbarOptionsMenu">
+          <div class="dropdown-item" onclick="openAddListModal(); closeNavbarOptionsMenu();">
+            <i class="fas fa-plus"></i> Ajouter une liste
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -105,47 +108,64 @@
         <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
       </div>
 
-      <div class="form-group">
-        <label for="cardTitleInput">Titre de la carte:</label>
-        <input type="text" id="cardTitleInput" placeholder="Entrez le titre de la carte">
-      </div>
-
-      <div class="form-group">
-        <label for="cardDescriptionInput">Description:</label>
-        <textarea id="cardDescriptionInput" placeholder="Entrez la description"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Étiquettes:</label>
-        <div class="color-picker" id="labelPicker">
-          <div class="color-option" style="background-color:#FF6B6B" onclick="toggleColor(this,'#FF6B6B')"></div>
-          <div class="color-option" style="background-color:#FFA500" onclick="toggleColor(this,'#FFA500')"></div>
-          <div class="color-option" style="background-color:#FFD93D" onclick="toggleColor(this,'#FFD93D')"></div>
-          <div class="color-option" style="background-color:#6BCB77" onclick="toggleColor(this,'#6BCB77')"></div>
-          <div class="color-option" style="background-color:#4D96FF" onclick="toggleColor(this,'#4D96FF')"></div>
-          <div class="color-option" style="background-color:#9D4EDD" onclick="toggleColor(this,'#9D4EDD')"></div>
-          <div class="color-option" style="background-color:#FF006E" onclick="toggleColor(this,'#FF006E')"></div>
-          <div class="color-option" style="background-color:#00F5FF" onclick="toggleColor(this,'#00F5FF')"></div>
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Titre</label>
+          <input type="text" class="card-detail-input" id="cardTitleInput" placeholder="Entrez le titre de la carte">
         </div>
       </div>
 
-      <div class="form-group form-group-relative">
-        <label for="cardAddressInput">Adresse (optionnel):</label>
-        <input type="text" id="cardAddressInput" placeholder="Entrez une adresse" autocomplete="off" oninput="searchAddress(this.value)">
-        <div id="addressAutocomplete" class="autocomplete-list" style="display:none;"></div>
-        <div id="addCardMiniMapContainer" style="display:none;">
-          <div id="addCardMiniMap"></div>
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Description</label>
+          <textarea class="card-detail-input" id="cardDescriptionInput" placeholder="Entrez la description" style="min-height:100px;"></textarea>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="cardDueDateInput">Date d'échéance:</label>
-        <input type="date" id="cardDueDateInput">
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Étiquettes</label>
+          <div class="color-picker" id="labelPicker">
+            <div class="color-option" style="background-color:#FF6B6B" onclick="toggleColor(this,'#FF6B6B')"></div>
+            <div class="color-option" style="background-color:#FFA500" onclick="toggleColor(this,'#FFA500')"></div>
+            <div class="color-option" style="background-color:#FFD93D" onclick="toggleColor(this,'#FFD93D')"></div>
+            <div class="color-option" style="background-color:#6BCB77" onclick="toggleColor(this,'#6BCB77')"></div>
+            <div class="color-option" style="background-color:#4D96FF" onclick="toggleColor(this,'#4D96FF')"></div>
+            <div class="color-option" style="background-color:#9D4EDD" onclick="toggleColor(this,'#9D4EDD')"></div>
+            <div class="color-option" style="background-color:#FF006E" onclick="toggleColor(this,'#FF006E')"></div>
+            <div class="color-option" style="background-color:#00F5FF" onclick="toggleColor(this,'#00F5FF')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Date d'échéance</label>
+          <input type="date" class="card-detail-input" id="cardDueDateInput">
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Adresse</label>
+          <div class="form-group-relative">
+            <input type="text" class="card-detail-input" id="cardAddressInput" placeholder="Entrez une adresse" autocomplete="off" oninput="searchAddress(this.value)">
+            <div id="addressAutocomplete" class="autocomplete-list" style="display:none;"></div>
+          </div>
+          <div id="addCardMiniMapContainer" style="display:none;">
+            <div id="addCardMiniMap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <label style="font-weight:700;color:#333;font-size:14px;">Checklist</label>
+        <div class="checklist-section" id="addCardChecklistContainer"></div>
+        <div class="add-checklist-item" onclick="addCardChecklistItem()">+ Ajouter un item</div>
       </div>
 
       <div class="modal-buttons">
-        <button class="btn-save" onclick="saveNewCard()">Créer</button>
-        <button class="btn-cancel" onclick="closeAddCardModal()">Annuler</button>
+        <button class="btn-save" onclick="saveNewCard()">Créer la carte</button>
       </div>
     </div>
   </div>
