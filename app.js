@@ -107,6 +107,9 @@ function renderBoard() {
   addListDiv.innerHTML = '<i class="fas fa-plus"></i> Ajouter une liste';
   addListDiv.onclick = openAddListModal;
   boardContent.appendChild(addListDiv);
+
+  // Initialize SortableJS for drag & drop (works on mobile)
+  initSortable();
 }
 
 function createListElement(list) {
@@ -137,9 +140,7 @@ function createListElement(list) {
   const cardsContainer = document.createElement('div');
   cardsContainer.className = 'cards-container';
   cardsContainer.id = `cards-${list.id}`;
-  cardsContainer.ondragover = (e) => handleDragOver(e, list.id);
-  cardsContainer.ondrop = (e) => handleDrop(e, list.id);
-  cardsContainer.ondragleave = handleDragLeave;
+  cardsContainer.setAttribute('data-list-id', list.id);
 
   cards.filter(c => c.listId === list.id).forEach(card => {
     cardsContainer.appendChild(createCardElement(card));
@@ -191,10 +192,7 @@ function enableEditListTitle(titleElement, list) {
 function createCardElement(card) {
   const cardDiv = document.createElement('div');
   cardDiv.className = 'card';
-  cardDiv.draggable = true;
   cardDiv.id = `card-${card.id}`;
-  cardDiv.ondragstart = handleDragStart;
-  cardDiv.ondragend = handleDragEnd;
 
   const title = document.createElement('div');
   title.className = 'card-title';
@@ -230,48 +228,55 @@ function createCardElement(card) {
 }
 
 // -------------------------
-// Drag & drop
+// Drag & drop (SortableJS)
 // -------------------------
-let draggedCard = null;
+let sortableInstances = [];
 
-function handleDragStart(e) {
-  draggedCard = e.target.closest('.card');
-  draggedCard.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
+function initSortable() {
+  // Destroy existing instances
+  sortableInstances.forEach(s => s.destroy());
+  sortableInstances = [];
 
-function handleDragEnd() {
-  if (draggedCard) draggedCard.classList.remove('dragging');
-  draggedCard = null;
-  document.querySelectorAll('.cards-container').forEach(c => c.classList.remove('drag-over'));
-}
+  // Initialize Sortable on each cards container
+  document.querySelectorAll('.cards-container').forEach(container => {
+    const sortable = new Sortable(container, {
+      group: 'cards',
+      animation: 150,
+      ghostClass: 'card-ghost',
+      chosenClass: 'card-chosen',
+      dragClass: 'card-drag',
+      handle: '.card',
+      draggable: '.card',
+      // Touch settings for mobile
+      delay: 100,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 5,
+      onEnd: function(evt) {
+        const cardId = parseInt(evt.item.id.replace('card-', ''), 10);
+        const newListId = parseInt(evt.to.getAttribute('data-list-id'), 10);
 
-function handleDragOver(e, listId) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  document.getElementById(`cards-${listId}`).classList.add('drag-over');
-}
+        const card = cards.find(c => c.id === cardId);
+        if (!card) return;
 
-function handleDragLeave(e) {
-  if (e.target.classList.contains('cards-container')) {
-    e.target.classList.remove('drag-over');
-  }
-}
+        // Update card's listId
+        card.listId = newListId;
 
-function handleDrop(e, listId) {
-  e.preventDefault();
-  e.target.closest('.cards-container').classList.remove('drag-over');
-  if (!draggedCard) return;
+        // Update cards order within the list based on DOM order
+        const cardElements = evt.to.querySelectorAll('.card');
+        const newOrder = Array.from(cardElements).map(el => parseInt(el.id.replace('card-', ''), 10));
 
-  const cardId = parseInt(draggedCard.id.replace('card-', ''), 10);
-  const card = cards.find(c => c.id === cardId);
-  if (!card) return;
+        // Reorder cards array to match DOM order
+        const otherCards = cards.filter(c => c.listId !== newListId);
+        const listCards = newOrder.map(id => cards.find(c => c.id === id)).filter(Boolean);
+        cards = [...otherCards, ...listCards];
 
-  card.listId = listId;
-  saveData();
-  renderBoard();
-  // Markers don't depend on listId, no fit needed
-  renderMapMarkers({ fit: false, reason: 'drag' });
+        saveData();
+        // Don't re-render board to avoid destroying drag state
+        renderMapMarkers({ fit: false, reason: 'drag' });
+      }
+    });
+    sortableInstances.push(sortable);
+  });
 }
 
 // -------------------------
