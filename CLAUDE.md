@@ -4,7 +4,7 @@
 
 Application web de type **Trello (Kanban)** enrichie d'une **carte interactive Leaflet/OpenStreetMap** pour géolocaliser les cartes. L'application permet de gérer des listes de tâches, des cartes détaillées avec adresses géolocalisées, et offre une visualisation cartographique complète.
 
-**Stack technique** : HTML5, CSS3, JavaScript ES6+ (vanilla), Leaflet.js 1.9.4, OpenStreetMap, API Nominatim
+**Stack technique** : HTML5, CSS3, JavaScript ES6+ (vanilla), Leaflet.js 1.9.4, SortableJS 1.15.0, OpenStreetMap, API Nominatim
 
 ## Structure des Fichiers
 
@@ -21,6 +21,7 @@ trello-project/
 ### Dépendances externes (CDN)
 - Font Awesome 6.4.0 (icônes)
 - Leaflet 1.9.4 (cartographie)
+- SortableJS 1.15.0 (drag & drop mobile/desktop)
 
 ---
 
@@ -30,7 +31,7 @@ trello-project/
 - Création de listes avec nom personnalisé
 - Renommage en édition inline (clic sur le titre)
 - Suppression avec choix : déplacer vers "Archives" ou supprimer les cartes
-- Drag & drop des cartes entre listes
+- Drag & drop des cartes entre listes (via SortableJS, compatible mobile/tactile)
 
 ### 2. Gestion des Cartes
 - Création avec : titre (obligatoire), description, adresse (auto-complétion), coordonnées GPS, date d'échéance, étiquettes (8 couleurs)
@@ -95,6 +96,7 @@ let map = null;              // Instance Leaflet (grande carte)
 let markers = {};            // markers[cardId] = L.marker
 let markersLayer = null;     // L.layerGroup pour la grande carte
 let detailMiniMap = null;    // Instance Leaflet (mini-carte)
+let sortableInstances = [];  // Instances SortableJS pour le drag & drop
 ```
 
 ### Fonctions Clés
@@ -103,9 +105,10 @@ let detailMiniMap = null;    // Instance Leaflet (mini-carte)
 |----------|-------------|
 | `init()` | Point d'entrée, charge données, initialise carte |
 | `loadData()` / `saveData()` | Gestion localStorage |
-| `renderBoard()` | Reconstruit le DOM du Kanban |
+| `renderBoard()` | Reconstruit le DOM du Kanban + initialise SortableJS |
 | `createListElement(list)` | Crée le DOM d'une liste |
 | `createCardElement(card)` | Crée le DOM d'une carte |
+| `initSortable()` | Initialise SortableJS sur chaque conteneur de cartes |
 | `renderMapMarkers({ fit, reason })` | Gère les marqueurs de la grande carte |
 | `fitMapToMarkers(animate)` | Calcule et applique fitBounds |
 | `initOrUpdateDetailMiniMap(card)` | Initialise/met à jour la mini-carte |
@@ -202,3 +205,5 @@ const FIT_MAX_ZOOM = 14;
 - La mini-carte nécessite `invalidateSize()` car elle est dans un conteneur caché au départ
 - Le fitBounds se déclenche uniquement quand on passe de 0 à >0 marqueurs, ou explicitement
 - L'auto-complétion a un debounce de 500ms pour limiter les appels API
+- SortableJS est réinitialisé après chaque `renderBoard()` via `initSortable()`
+- Le drag & drop mobile utilise un délai de 100ms (`delayOnTouchOnly`) pour distinguer tap et drag
