@@ -196,6 +196,14 @@ function createCardElement(card) {
   cardDiv.ondragstart = handleDragStart;
   cardDiv.ondragend = handleDragEnd;
 
+  // Cover image thumbnail
+  if (card.coverImage) {
+    const coverImg = document.createElement('div');
+    coverImg.className = 'card-cover-image';
+    coverImg.style.backgroundImage = `url(${card.coverImage})`;
+    cardDiv.appendChild(coverImg);
+  }
+
   const title = document.createElement('div');
   title.className = 'card-title';
   title.textContent = card.title;
@@ -347,6 +355,7 @@ let addCardChecklist = []; // Temporary checklist for new card
 function openAddCardModal() {
   selectedLabels = [];
   addCardChecklist = [];
+  addCardCoverImage = null;
   document.getElementById('cardModalTitle').textContent = 'Ajouter une carte';
   document.getElementById('cardTitleInput').value = '';
   document.getElementById('cardDescriptionInput').value = '';
@@ -356,6 +365,11 @@ function openAddCardModal() {
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardChecklistContainer').innerHTML = '';
+  document.getElementById('addCardCoverImageContainer').style.display = 'none';
+  document.getElementById('addCardImageSearchInput').value = '';
+  document.getElementById('addCardImageSearchResults').style.display = 'none';
+  document.getElementById('addCardUrlInputContainer').style.display = 'none';
+  document.getElementById('addCardImageUrlInput').value = '';
   window.currentAddressCoordinates = null;
 
   document.getElementById('addCardModal').classList.add('show');
@@ -366,7 +380,10 @@ function closeAddCardModal() {
   document.getElementById('addCardModal').classList.remove('show');
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
+  document.getElementById('addCardCoverImageContainer').style.display = 'none';
+  document.getElementById('addCardImageSearchResults').style.display = 'none';
   addCardChecklist = [];
+  addCardCoverImage = null;
 }
 
 function toggleColor(element, color) {
@@ -432,6 +449,8 @@ function saveNewCard() {
     address: document.getElementById('cardAddressInput').value.trim(),
     coordinates: window.currentAddressCoordinates || null,
     dueDate: document.getElementById('cardDueDateInput').value,
+    coverImage: addCardCoverImage ? addCardCoverImage.url : null,
+    coverImageCredit: addCardCoverImage ? addCardCoverImage.credit : null,
     checklist: [...addCardChecklist],
     history: [{ action: 'Carte créée', timestamp: new Date().toLocaleString('fr-FR') }],
     createdAt: new Date().toLocaleString('fr-FR')
@@ -440,6 +459,7 @@ function saveNewCard() {
   cards.push(newCard);
   window.currentAddressCoordinates = null;
   addCardChecklist = [];
+  addCardCoverImage = null;
 
   saveData();
   renderBoard();
@@ -474,6 +494,25 @@ function openCardDetailModal(card) {
   document.getElementById('detailAddress').className = card.address ? 'card-detail-value' : 'card-detail-value empty';
   document.getElementById('detailAddressInput').value = card.address || '';
   document.getElementById('detailAddressAutocomplete').style.display = 'none';
+
+  // Cover image
+  const coverContainer = document.getElementById('detailCoverImageContainer');
+  const coverImg = document.getElementById('detailCoverImage');
+  const removeCoverOption = document.getElementById('removeCoverImageOption');
+  if (card.coverImage) {
+    coverContainer.style.display = 'block';
+    coverImg.src = card.coverImage;
+    if (removeCoverOption) removeCoverOption.style.display = 'block';
+  } else {
+    coverContainer.style.display = 'none';
+    if (removeCoverOption) removeCoverOption.style.display = 'none';
+  }
+
+  // Reset image search
+  document.getElementById('imageSearchInput').value = '';
+  document.getElementById('imageSearchResults').style.display = 'none';
+  document.getElementById('detailUrlInputContainer').style.display = 'none';
+  document.getElementById('detailImageUrlInput').value = '';
 
   renderDetailLabels(card);
   renderChecklist(card);
@@ -1204,6 +1243,343 @@ window.onmouseup = (event) => {
 
   mouseDownTarget = null;
 };
+
+// -------------------------
+// Image Search (Teleport API - free, no key required)
+// -------------------------
+let addCardCoverImage = null; // Temporary cover image for new card
+
+// Predefined image collections for common travel/place searches
+const IMAGE_COLLECTIONS = {
+  // Monuments & landmarks
+  'tour eiffel': ['https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=800', 'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=800', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800'],
+  'paris': ['https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800', 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800', 'https://images.unsplash.com/photo-1431274172761-fca41d930114?w=800'],
+  'london': ['https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800', 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800', 'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=800'],
+  'new york': ['https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800', 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800', 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?w=800'],
+  'tokyo': ['https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800', 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800', 'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=800'],
+
+  // Nature
+  'plage': ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800', 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=800'],
+  'beach': ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800', 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=800'],
+  'montagne': ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800', 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800'],
+  'mountain': ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800', 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800'],
+  'foret': ['https://images.unsplash.com/photo-1448375240586-882707db888b?w=800', 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=800', 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=800'],
+  'forest': ['https://images.unsplash.com/photo-1448375240586-882707db888b?w=800', 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=800', 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=800'],
+  'lac': ['https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800', 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800', 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800'],
+  'lake': ['https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800', 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800', 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800'],
+
+  // Places
+  'restaurant': ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800', 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800'],
+  'cafe': ['https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800', 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800'],
+  'hotel': ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800'],
+  'musee': ['https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800', 'https://images.unsplash.com/photo-1503152394-c571994fd383?w=800', 'https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800'],
+  'museum': ['https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800', 'https://images.unsplash.com/photo-1503152394-c571994fd383?w=800', 'https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800'],
+  'shopping': ['https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800', 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800', 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800'],
+  'parc': ['https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800', 'https://images.unsplash.com/photo-1496429862132-5ab36b6ae330?w=800', 'https://images.unsplash.com/photo-1558101776-36d2a8b0f9a6?w=800'],
+  'park': ['https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800', 'https://images.unsplash.com/photo-1496429862132-5ab36b6ae330?w=800', 'https://images.unsplash.com/photo-1558101776-36d2a8b0f9a6?w=800'],
+
+  // Activities
+  'voyage': ['https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800', 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800', 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=800'],
+  'travel': ['https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800', 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800', 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=800'],
+  'avion': ['https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800', 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800', 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?w=800'],
+  'airport': ['https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800', 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800', 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?w=800'],
+
+  // Default/generic
+  'default': ['https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800', 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800', 'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=800', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800', 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800', 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800']
+};
+
+// Search images for detail modal
+function searchImages() {
+  const query = document.getElementById('imageSearchInput').value.trim();
+  if (!query) return;
+
+  const resultsContainer = document.getElementById('imageSearchResults');
+  displayImageSearchResults(query, resultsContainer, 'detail');
+}
+
+// Search images for add card modal
+function searchAddCardImages() {
+  const query = document.getElementById('addCardImageSearchInput').value.trim();
+  if (!query) return;
+
+  const resultsContainer = document.getElementById('addCardImageSearchResults');
+  displayImageSearchResults(query, resultsContainer, 'addCard');
+}
+
+function displayImageSearchResults(query, container, mode) {
+  container.style.display = 'grid';
+  container.innerHTML = '<div class="image-search-loading"><i class="fas fa-spinner fa-spin"></i> Recherche en cours...</div>';
+
+  // Small delay to show loading state
+  setTimeout(() => {
+    const queryLower = query.toLowerCase().trim();
+    let images = [];
+
+    // Try to find matching collection
+    for (const [key, urls] of Object.entries(IMAGE_COLLECTIONS)) {
+      if (queryLower.includes(key) || key.includes(queryLower)) {
+        images = [...urls];
+        break;
+      }
+    }
+
+    // If no match found, use default collection
+    if (images.length === 0) {
+      images = [...IMAGE_COLLECTIONS['default']];
+    }
+
+    // Shuffle and take up to 9 images
+    images = shuffleArray(images).slice(0, 9);
+
+    // Add more variety by appending random params
+    images = images.map((url, i) => `${url}&sig=${Date.now()}-${i}`);
+
+    displayLocalResults(images, query, container, mode);
+  }, 300);
+}
+
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function displayLocalResults(images, query, container, mode) {
+  container.innerHTML = '';
+
+  if (images.length === 0) {
+    container.innerHTML = '<div class="image-search-empty">Aucune image trouvée. Essayez d\'autres mots-clés.</div>';
+    return;
+  }
+
+  images.forEach((imageUrl, index) => {
+    const item = document.createElement('div');
+    item.className = 'image-search-item';
+    item.innerHTML = `
+      <img src="${imageUrl}" alt="${query}" onerror="this.parentElement.style.display='none'">
+      <div class="image-credit">Unsplash</div>
+    `;
+    item.onclick = () => {
+      // Use larger version for the cover
+      const largeUrl = imageUrl.replace('w=800', 'w=1200');
+      if (mode === 'detail') {
+        selectCoverImage(largeUrl, 'Unsplash');
+      } else {
+        selectAddCardCoverImage(largeUrl, 'Unsplash');
+      }
+    };
+    container.appendChild(item);
+  });
+}
+
+// Select cover image for existing card (detail modal)
+function selectCoverImage(imageUrl, photographer) {
+  const card = cards.find(c => c.id === currentCardId);
+  if (!card) return;
+
+  card.coverImage = imageUrl;
+  card.coverImageCredit = photographer;
+  card.history.push({
+    action: `Image de couverture ajoutée (${photographer})`,
+    timestamp: new Date().toLocaleString('fr-FR')
+  });
+
+  saveData();
+  renderBoard();
+
+  // Update modal display
+  const container = document.getElementById('detailCoverImageContainer');
+  const img = document.getElementById('detailCoverImage');
+
+  container.style.display = 'block';
+  img.src = imageUrl;
+
+  // Show the remove option in menu
+  const removeCoverOption = document.getElementById('removeCoverImageOption');
+  if (removeCoverOption) removeCoverOption.style.display = 'block';
+
+  // Hide search results
+  document.getElementById('imageSearchResults').style.display = 'none';
+  document.getElementById('imageSearchInput').value = '';
+
+  renderHistory(card);
+}
+
+// Select cover image for new card (add card modal)
+function selectAddCardCoverImage(imageUrl, photographer) {
+  addCardCoverImage = { url: imageUrl, credit: photographer };
+
+  // Update modal display
+  const container = document.getElementById('addCardCoverImageContainer');
+  const img = document.getElementById('addCardCoverImage');
+
+  container.style.display = 'block';
+  img.src = imageUrl;
+
+  // Hide search results
+  document.getElementById('addCardImageSearchResults').style.display = 'none';
+  document.getElementById('addCardImageSearchInput').value = '';
+}
+
+// Remove cover image from existing card (detail modal)
+function removeCoverImage() {
+  const card = cards.find(c => c.id === currentCardId);
+  if (!card) return;
+
+  card.coverImage = null;
+  card.coverImageCredit = null;
+  card.history.push({
+    action: 'Image de couverture supprimée',
+    timestamp: new Date().toLocaleString('fr-FR')
+  });
+
+  saveData();
+  renderBoard();
+
+  // Update modal display
+  document.getElementById('detailCoverImageContainer').style.display = 'none';
+
+  // Hide the remove option in menu
+  const removeCoverOption = document.getElementById('removeCoverImageOption');
+  if (removeCoverOption) removeCoverOption.style.display = 'none';
+
+  renderHistory(card);
+}
+
+// Remove cover image from new card (add card modal)
+function removeAddCardCoverImage() {
+  addCardCoverImage = null;
+  document.getElementById('addCardCoverImageContainer').style.display = 'none';
+}
+
+// Toggle URL input visibility
+function toggleUrlInput(mode) {
+  const containerId = mode === 'detail' ? 'detailUrlInputContainer' : 'addCardUrlInputContainer';
+  const container = document.getElementById(containerId);
+
+  if (container.style.display === 'none' || container.style.display === '') {
+    container.style.display = 'flex';
+    container.querySelector('input').focus();
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+// Apply image from URL
+function applyImageUrl(mode) {
+  const inputId = mode === 'detail' ? 'detailImageUrlInput' : 'addCardImageUrlInput';
+  const url = document.getElementById(inputId).value.trim();
+
+  if (!url) {
+    alert('Veuillez entrer une URL d\'image valide');
+    return;
+  }
+
+  // Validate URL format
+  if (!url.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i) && !url.match(/^https?:\/\/.+/i)) {
+    // Try to use it anyway, the browser will validate
+  }
+
+  if (mode === 'detail') {
+    selectCoverImage(url, 'Lien externe');
+    document.getElementById('detailUrlInputContainer').style.display = 'none';
+    document.getElementById('detailImageUrlInput').value = '';
+  } else {
+    selectAddCardCoverImage(url, 'Lien externe');
+    document.getElementById('addCardUrlInputContainer').style.display = 'none';
+    document.getElementById('addCardImageUrlInput').value = '';
+  }
+}
+
+// Handle image file upload
+function handleImageUpload(input, mode) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide');
+    return;
+  }
+
+  // Validate file size (max 5MB for localStorage)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    alert('L\'image est trop grande. Taille maximum : 5 Mo');
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const base64Data = e.target.result;
+
+    if (mode === 'detail') {
+      selectCoverImage(base64Data, 'Image importée');
+    } else {
+      selectAddCardCoverImage(base64Data, 'Image importée');
+    }
+  };
+
+  reader.onerror = function() {
+    alert('Erreur lors de la lecture du fichier');
+  };
+
+  reader.readAsDataURL(file);
+
+  // Reset input to allow selecting the same file again
+  input.value = '';
+}
+
+// Add Enter key support for image search and URL input
+document.addEventListener('DOMContentLoaded', () => {
+  // Detail modal image search
+  const imageSearchInput = document.getElementById('imageSearchInput');
+  if (imageSearchInput) {
+    imageSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchImages();
+      }
+    });
+  }
+
+  // Add card modal image search
+  const addCardImageSearchInput = document.getElementById('addCardImageSearchInput');
+  if (addCardImageSearchInput) {
+    addCardImageSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchAddCardImages();
+      }
+    });
+  }
+
+  // Detail modal URL input
+  const detailImageUrlInput = document.getElementById('detailImageUrlInput');
+  if (detailImageUrlInput) {
+    detailImageUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyImageUrl('detail');
+      }
+    });
+  }
+
+  // Add card modal URL input
+  const addCardImageUrlInput = document.getElementById('addCardImageUrlInput');
+  if (addCardImageUrlInput) {
+    addCardImageUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyImageUrl('addCard');
+      }
+    });
+  }
+});
 
 // -------------------------
 // Boot
