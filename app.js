@@ -1595,41 +1595,62 @@ function initMobileKeyboardHandler() {
   if (!isMobile) return;
 
   const modals = document.querySelectorAll('.modal');
-  let initialViewportHeight = window.innerHeight;
+  let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   let keyboardOpen = false;
+  let scrollTimeoutId = null;
+  let lastFocusedElement = null;
+  let hasScrolledForCurrentFocus = false;
+
+  // Set initial CSS custom property for viewport height
+  updateViewportHeight();
 
   // Use visualViewport API if available (better support on iOS/Android)
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      const currentHeight = window.visualViewport.height;
-      const heightDiff = initialViewportHeight - currentHeight;
-
-      // Keyboard is considered open if height reduced by more than 150px
-      const isKeyboardNowOpen = heightDiff > 150;
-
-      if (isKeyboardNowOpen !== keyboardOpen) {
-        keyboardOpen = isKeyboardNowOpen;
-        handleKeyboardChange(keyboardOpen);
-      }
-    });
-
-    // Update initial height when viewport scrolls (iOS behavior)
-    window.visualViewport.addEventListener('scroll', () => {
-      scrollToFocusedElement();
-    });
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+    window.visualViewport.addEventListener('scroll', handleViewportScroll);
   } else {
-    // Fallback for older browsers: detect based on window resize
-    window.addEventListener('resize', () => {
-      const currentHeight = window.innerHeight;
-      const heightDiff = initialViewportHeight - currentHeight;
+    // Fallback for older browsers
+    window.addEventListener('resize', handleWindowResize);
+  }
 
-      const isKeyboardNowOpen = heightDiff > 150;
+  function updateViewportHeight() {
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--visual-viewport-height', `${vh}px`);
+  }
 
-      if (isKeyboardNowOpen !== keyboardOpen) {
-        keyboardOpen = isKeyboardNowOpen;
-        handleKeyboardChange(keyboardOpen);
-      }
-    });
+  function handleViewportResize() {
+    const currentHeight = window.visualViewport.height;
+    const heightDiff = initialViewportHeight - currentHeight;
+
+    // Update CSS custom property in real-time
+    updateViewportHeight();
+
+    // Keyboard is considered open if height reduced by more than 150px
+    const isKeyboardNowOpen = heightDiff > 150;
+
+    if (isKeyboardNowOpen !== keyboardOpen) {
+      keyboardOpen = isKeyboardNowOpen;
+      handleKeyboardChange(keyboardOpen);
+    }
+  }
+
+  function handleViewportScroll() {
+    // Update viewport height on iOS scroll (iOS moves viewport when keyboard opens)
+    updateViewportHeight();
+  }
+
+  function handleWindowResize() {
+    const currentHeight = window.innerHeight;
+    const heightDiff = initialViewportHeight - currentHeight;
+
+    updateViewportHeight();
+
+    const isKeyboardNowOpen = heightDiff > 150;
+
+    if (isKeyboardNowOpen !== keyboardOpen) {
+      keyboardOpen = isKeyboardNowOpen;
+      handleKeyboardChange(keyboardOpen);
+    }
   }
 
   function handleKeyboardChange(isOpen) {
@@ -1641,40 +1662,52 @@ function initMobileKeyboardHandler() {
       }
     });
 
-    if (isOpen) {
-      // Small delay to let the keyboard finish opening
-      setTimeout(scrollToFocusedElement, 100);
+    // When keyboard opens, scroll to focused element once (if not already done)
+    if (isOpen && lastFocusedElement && !hasScrolledForCurrentFocus) {
+      scrollToElementOnce(lastFocusedElement);
     }
   }
 
-  function scrollToFocusedElement() {
-    const activeElement = document.activeElement;
-    if (!activeElement) return;
-
-    const isInput = activeElement.tagName === 'INPUT' ||
-                    activeElement.tagName === 'TEXTAREA' ||
-                    activeElement.tagName === 'SELECT';
-
-    if (!isInput) return;
+  function scrollToElementOnce(element) {
+    // Clear any pending scroll
+    if (scrollTimeoutId) {
+      clearTimeout(scrollTimeoutId);
+    }
 
     // Find the open modal
     const openModal = document.querySelector('.modal.show');
     if (!openModal) return;
 
-    const modalContent = openModal.querySelector('.modal-content');
-    if (!modalContent) return;
+    // Single scroll to position the element, then user has free scroll
+    scrollTimeoutId = setTimeout(() => {
+      // Get element position relative to the modal
+      const modalContent = openModal.querySelector('.modal-content');
+      if (!modalContent) return;
 
-    // Scroll the focused element into view
-    setTimeout(() => {
-      activeElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
+      // Calculate element position within the modal
+      const elementRect = element.getBoundingClientRect();
+      const modalRect = openModal.getBoundingClientRect();
+      const currentScrollTop = openModal.scrollTop;
+
+      // Get visible height (accounting for keyboard)
+      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+      // Calculate where we need to scroll to show the element
+      // Position element at roughly 1/3 from top of visible area
+      const elementTopInModal = elementRect.top - modalRect.top + currentScrollTop;
+      const targetScrollTop = elementTopInModal - (viewportHeight / 3);
+
+      openModal.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: 'smooth'
       });
-    }, 50);
+
+      hasScrolledForCurrentFocus = true;
+      scrollTimeoutId = null;
+    }, 150);
   }
 
-  // Also handle focus events on inputs to ensure visibility
+  // Handle focus events on inputs - scroll once when focused
   document.addEventListener('focusin', (e) => {
     const target = e.target;
     const isInput = target.tagName === 'INPUT' ||
@@ -1686,14 +1719,58 @@ function initMobileKeyboardHandler() {
     const openModal = document.querySelector('.modal.show');
     if (!openModal) return;
 
-    // Delay to allow keyboard to open
+    // Track new focus
+    if (lastFocusedElement !== target) {
+      lastFocusedElement = target;
+      hasScrolledForCurrentFocus = false;
+    }
+
+    // Delay to allow keyboard to open, then scroll once
     setTimeout(() => {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      });
-    }, 300);
+      if (!hasScrolledForCurrentFocus) {
+        scrollToElementOnce(target);
+      }
+    }, 350);
+  });
+
+  // Handle blur to reset scroll tracking
+  document.addEventListener('focusout', (e) => {
+    // Small delay to check if focus moved to another input
+    setTimeout(() => {
+      const activeElement = document.activeElement;
+      const isStillInInput = activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+         activeElement.tagName === 'TEXTAREA' ||
+         activeElement.tagName === 'SELECT');
+
+      if (!isStillInInput) {
+        // Clear scroll timeout if user leaves all inputs
+        if (scrollTimeoutId) {
+          clearTimeout(scrollTimeoutId);
+          scrollTimeoutId = null;
+        }
+        lastFocusedElement = null;
+        hasScrolledForCurrentFocus = false;
+      }
+    }, 100);
+  });
+
+  // Update initial height on orientation change
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      updateViewportHeight();
+    }, 500);
+  });
+
+  // Also update on page visibility change (when returning to the page)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      setTimeout(() => {
+        initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        updateViewportHeight();
+      }, 300);
+    }
   });
 }
 

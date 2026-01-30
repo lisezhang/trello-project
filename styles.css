@@ -964,12 +964,14 @@ body {
     font-size: 16px !important;
   }
 
-  /* Modal mobile adjustments */
+  /* Modal mobile adjustments - always top-aligned on mobile */
   .modal.show {
     align-items: flex-start;
-    padding: 10px;
+    padding: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .modal-content {
@@ -978,6 +980,8 @@ body {
     width: calc(100% - 20px);
     max-width: calc(100% - 20px);
     padding: 15px;
+    /* Add bottom padding to ensure last elements are scrollable above keyboard */
+    padding-bottom: 30px;
   }
 
   /* Cover image adjustments for mobile modal padding */
@@ -990,19 +994,33 @@ body {
     height: 140px;
   }
 
-  /* When keyboard is open */
+  /* When keyboard is open - use visual viewport height */
   .modal.keyboard-open {
+    /* Use CSS custom property set by JavaScript */
+    height: calc(var(--visual-viewport-height, 100vh));
+    max-height: calc(var(--visual-viewport-height, 100vh));
     padding-bottom: 0;
   }
 
   .modal.keyboard-open .modal-content {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    /* Ensure there's enough space at the bottom to scroll past the keyboard */
+    padding-bottom: 50px;
   }
 
-  /* Ensure inputs are visible when focused */
-  .modal-content:focus-within {
-    scroll-behavior: smooth;
+  /* Ensure the modal scrolls properly */
+  .modal.show::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .modal.show::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .modal.show::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
   }
 
   /* Image search grid on mobile */
@@ -1041,13 +1059,14 @@ body {
 /* Extra small devices */
 @media (max-width: 480px) {
   .modal.show {
-    padding: 5px;
+    padding: 0;
   }
 
   .modal-content {
     width: calc(100% - 10px);
     max-width: calc(100% - 10px);
     padding: 12px;
+    padding-bottom: 30px;
     margin: 5px auto;
   }
 
@@ -1068,5 +1087,10 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 6px;
     max-height: 200px;
+  }
+
+  /* Keyboard open on small devices */
+  .modal.keyboard-open .modal-content {
+    padding-bottom: 40px;
   }
 }
