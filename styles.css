@@ -1019,6 +1019,20 @@ body {
   font-size: 13px;
 }
 
+.label-create-item {
+  background: #f0f7ff;
+  border-bottom: 1px solid #ddd;
+}
+
+.label-create-item:hover {
+  background: #e0efff;
+}
+
+.label-create-item i {
+  color: #667eea;
+  margin-right: 5px;
+}
+
 /* Custom Labels - Management Modal */
 .label-form-section {
   background: #f5f5f5;

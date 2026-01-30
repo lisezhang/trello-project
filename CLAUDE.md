@@ -112,7 +112,10 @@ trello-project/
 
 ### 13. Étiquettes Personnalisées
 - **Création d'étiquettes** : nom + couleur personnalisée (palette prédéfinie ou sélecteur de couleur libre)
-- **Gestion via menu "..."** : modal dédiée pour créer, modifier, supprimer les étiquettes
+- **Gestion via menu "..."** : modal dédiée accessible depuis :
+  - Le menu "..." de la **navbar** (en haut à droite du board)
+  - Le menu "..." du **modal de détail** d'une carte
+- **Création rapide** : taper un nom dans le champ de recherche et cliquer sur "Créer" pour créer instantanément une étiquette (couleur aléatoire auto-assignée)
 - **Sélection avec auto-complétion** : champ de recherche pour filtrer les étiquettes existantes
 - **Multi-sélection** : possibilité de sélectionner plusieurs étiquettes par carte
 - **Affichage avec nom** : les étiquettes s'affichent avec leur nom dans une pastille colorée
@@ -171,6 +174,12 @@ let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 | `handleImageUpload(input, mode)` | Gère l'upload de fichier image |
 | `applyImageUrl(mode)` | Applique une image depuis URL |
 | `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
+| `renderAddCardLabelSelector()` | Affiche le sélecteur d'étiquettes (modal ajout) |
+| `renderDetailLabelSelector()` | Affiche le sélecteur d'étiquettes (modal détail) |
+| `quickCreateLabel(name, mode)` | Crée une étiquette rapidement depuis le champ de recherche |
+| `openLabelsManagementModal()` | Ouvre le modal de gestion des étiquettes |
+| `saveLabel()` / `editLabel()` / `deleteLabel()` | CRUD des étiquettes personnalisées |
+| `getLabelById(id)` | Récupère une étiquette par son ID |
 
 ### Constantes de Configuration
 ```javascript
@@ -179,6 +188,7 @@ const DEFAULT_MAP_ZOOM = 6;
 const FIT_PADDING = [40, 40];
 const FIT_MAX_ZOOM = 8;
 const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégorie
+const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies pour les étiquettes
 ```
 
 ---
