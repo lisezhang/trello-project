@@ -1616,6 +1616,10 @@ function initMobileKeyboardHandler() {
   function updateViewportHeight() {
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty('--visual-viewport-height', `${vh}px`);
+
+    // Also update the keyboard height for margin calculation
+    const keyboardHeight = initialViewportHeight - vh;
+    document.documentElement.style.setProperty('--keyboard-height', `${Math.max(0, keyboardHeight)}px`);
   }
 
   function handleViewportResize() {
@@ -1657,8 +1661,15 @@ function initMobileKeyboardHandler() {
     modals.forEach(modal => {
       if (isOpen) {
         modal.classList.add('keyboard-open');
+        // Force body to not scroll
+        document.body.style.overflow = 'hidden';
       } else {
         modal.classList.remove('keyboard-open');
+        // Restore body scroll only if no modal is open
+        const anyModalOpen = document.querySelector('.modal.show');
+        if (!anyModalOpen) {
+          document.body.style.overflow = '';
+        }
       }
     });
 
@@ -1686,7 +1697,6 @@ function initMobileKeyboardHandler() {
 
       // Calculate element position within the modal
       const elementRect = element.getBoundingClientRect();
-      const modalRect = openModal.getBoundingClientRect();
       const currentScrollTop = openModal.scrollTop;
 
       // Get visible height (accounting for keyboard)
@@ -1694,8 +1704,8 @@ function initMobileKeyboardHandler() {
 
       // Calculate where we need to scroll to show the element
       // Position element at roughly 1/3 from top of visible area
-      const elementTopInModal = elementRect.top - modalRect.top + currentScrollTop;
-      const targetScrollTop = elementTopInModal - (viewportHeight / 3);
+      const elementTopAbsolute = elementRect.top + currentScrollTop;
+      const targetScrollTop = elementTopAbsolute - (viewportHeight / 3);
 
       openModal.scrollTo({
         top: Math.max(0, targetScrollTop),
@@ -1760,6 +1770,9 @@ function initMobileKeyboardHandler() {
     setTimeout(() => {
       initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       updateViewportHeight();
+      // Reset keyboard state after orientation change
+      keyboardOpen = false;
+      modals.forEach(modal => modal.classList.remove('keyboard-open'));
     }, 500);
   });
 

@@ -972,6 +972,11 @@ body {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    /* Ensure modal backdrop covers entire screen */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .modal-content {
@@ -982,6 +987,10 @@ body {
     padding: 15px;
     /* Add bottom padding to ensure last elements are scrollable above keyboard */
     padding-bottom: 30px;
+    /* Ensure solid background to prevent board from showing through */
+    background: #fff;
+    position: relative;
+    z-index: 1;
   }
 
   /* Cover image adjustments for mobile modal padding */
@@ -994,19 +1003,30 @@ body {
     height: 140px;
   }
 
-  /* When keyboard is open - use visual viewport height */
+  /* When keyboard is open - ensure proper display */
   .modal.keyboard-open {
-    /* Use CSS custom property set by JavaScript */
-    height: calc(var(--visual-viewport-height, 100vh));
-    max-height: calc(var(--visual-viewport-height, 100vh));
-    padding-bottom: 0;
+    /* Keep full screen coverage but use visual viewport for scrolling */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Darker overlay to better hide the background */
+    background: rgba(0, 0, 0, 0.7);
+    /* Ensure we can still scroll */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal.keyboard-open .modal-content {
+    /* Position modal at top with proper spacing */
     margin-top: 10px;
-    margin-bottom: 30px;
-    /* Ensure there's enough space at the bottom to scroll past the keyboard */
-    padding-bottom: 50px;
+    /* Add extra bottom margin so content can scroll above keyboard */
+    margin-bottom: calc(var(--keyboard-height, 0px) + 50px);
+    /* Ensure enough bottom padding for the last elements */
+    padding-bottom: 40px;
+    /* Prevent content from being too tall */
+    max-height: none;
   }
 
   /* Ensure the modal scrolls properly */
@@ -1060,6 +1080,11 @@ body {
 @media (max-width: 480px) {
   .modal.show {
     padding: 0;
+    /* Ensure full coverage on small screens too */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .modal-content {
@@ -1068,6 +1093,8 @@ body {
     padding: 12px;
     padding-bottom: 30px;
     margin: 5px auto;
+    /* Solid background */
+    background: #fff;
   }
 
   .cover-image-container {
@@ -1090,7 +1117,12 @@ body {
   }
 
   /* Keyboard open on small devices */
+  .modal.keyboard-open {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
   .modal.keyboard-open .modal-content {
     padding-bottom: 40px;
+    margin-bottom: calc(var(--keyboard-height, 0px) + 40px);
   }
 }
