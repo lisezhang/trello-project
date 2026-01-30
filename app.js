@@ -1587,6 +1587,120 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // -------------------------
+// Mobile Keyboard Detection & Modal Adjustment
+// -------------------------
+function initMobileKeyboardHandler() {
+  // Only run on mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (!isMobile) return;
+
+  const modals = document.querySelectorAll('.modal');
+  let initialViewportHeight = window.innerHeight;
+  let keyboardOpen = false;
+
+  // Use visualViewport API if available (better support on iOS/Android)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const currentHeight = window.visualViewport.height;
+      const heightDiff = initialViewportHeight - currentHeight;
+
+      // Keyboard is considered open if height reduced by more than 150px
+      const isKeyboardNowOpen = heightDiff > 150;
+
+      if (isKeyboardNowOpen !== keyboardOpen) {
+        keyboardOpen = isKeyboardNowOpen;
+        handleKeyboardChange(keyboardOpen);
+      }
+    });
+
+    // Update initial height when viewport scrolls (iOS behavior)
+    window.visualViewport.addEventListener('scroll', () => {
+      scrollToFocusedElement();
+    });
+  } else {
+    // Fallback for older browsers: detect based on window resize
+    window.addEventListener('resize', () => {
+      const currentHeight = window.innerHeight;
+      const heightDiff = initialViewportHeight - currentHeight;
+
+      const isKeyboardNowOpen = heightDiff > 150;
+
+      if (isKeyboardNowOpen !== keyboardOpen) {
+        keyboardOpen = isKeyboardNowOpen;
+        handleKeyboardChange(keyboardOpen);
+      }
+    });
+  }
+
+  function handleKeyboardChange(isOpen) {
+    modals.forEach(modal => {
+      if (isOpen) {
+        modal.classList.add('keyboard-open');
+      } else {
+        modal.classList.remove('keyboard-open');
+      }
+    });
+
+    if (isOpen) {
+      // Small delay to let the keyboard finish opening
+      setTimeout(scrollToFocusedElement, 100);
+    }
+  }
+
+  function scrollToFocusedElement() {
+    const activeElement = document.activeElement;
+    if (!activeElement) return;
+
+    const isInput = activeElement.tagName === 'INPUT' ||
+                    activeElement.tagName === 'TEXTAREA' ||
+                    activeElement.tagName === 'SELECT';
+
+    if (!isInput) return;
+
+    // Find the open modal
+    const openModal = document.querySelector('.modal.show');
+    if (!openModal) return;
+
+    const modalContent = openModal.querySelector('.modal-content');
+    if (!modalContent) return;
+
+    // Scroll the focused element into view
+    setTimeout(() => {
+      activeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }, 50);
+  }
+
+  // Also handle focus events on inputs to ensure visibility
+  document.addEventListener('focusin', (e) => {
+    const target = e.target;
+    const isInput = target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.tagName === 'SELECT';
+
+    if (!isInput) return;
+
+    const openModal = document.querySelector('.modal.show');
+    if (!openModal) return;
+
+    // Delay to allow keyboard to open
+    setTimeout(() => {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    }, 300);
+  });
+}
+
+// Initialize mobile keyboard handler when DOM is ready
+document.addEventListener('DOMContentLoaded', initMobileKeyboardHandler);
+
+// -------------------------
 // Boot
 // -------------------------
 window.onload = init;

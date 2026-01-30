@@ -953,4 +953,120 @@ body {
     max-width: 95%;
     padding: 20px;
   }
+
+  /* Prevent auto-zoom on input focus (iOS zooms when font-size < 16px) */
+  .form-group input,
+  .form-group textarea,
+  .form-group select,
+  .card-detail-input,
+  .list-title-input,
+  .map-controls input {
+    font-size: 16px !important;
+  }
+
+  /* Modal mobile adjustments */
+  .modal.show {
+    align-items: flex-start;
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-content {
+    margin: 10px auto;
+    max-height: none;
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    padding: 15px;
+  }
+
+  /* Cover image adjustments for mobile modal padding */
+  .cover-image-container {
+    width: calc(100% + 30px);
+    margin: -15px -15px 15px -15px;
+  }
+
+  .cover-image {
+    height: 140px;
+  }
+
+  /* When keyboard is open */
+  .modal.keyboard-open {
+    padding-bottom: 0;
+  }
+
+  .modal.keyboard-open .modal-content {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+
+  /* Ensure inputs are visible when focused */
+  .modal-content:focus-within {
+    scroll-behavior: smooth;
+  }
+
+  /* Image search grid on mobile */
+  .image-search-results {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-height: 250px;
+  }
+
+  /* Alternative image buttons stack on mobile */
+  .image-alt-buttons {
+    flex-direction: column;
+  }
+
+  .image-alt-btn {
+    width: 100%;
+  }
+
+  /* Modal buttons on mobile */
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .modal-buttons button {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Mini map smaller on mobile */
+  #detailMiniMap,
+  #addCardMiniMap {
+    height: 180px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .modal.show {
+    padding: 5px;
+  }
+
+  .modal-content {
+    width: calc(100% - 10px);
+    max-width: calc(100% - 10px);
+    padding: 12px;
+    margin: 5px auto;
+  }
+
+  .cover-image-container {
+    width: calc(100% + 24px);
+    margin: -12px -12px 12px -12px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .card-detail-field label {
+    font-size: 12px;
+  }
+
+  .image-search-results {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-height: 200px;
+  }
 }
