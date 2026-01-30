@@ -102,8 +102,13 @@ trello-project/
 - **Scroll automatique** : centre le champ focusé une seule fois à l'ouverture du clavier
 - **Scroll manuel libre** : après le centrage initial, l'utilisateur peut scroller librement pour voir le haut (image) ou le bas de la modal
 - **Modal alignée en haut** : sur mobile, la modal reste en haut de l'écran (pas centrée) même après fermeture du clavier
-- **Hauteur dynamique** : variable CSS `--visual-viewport-height` mise à jour en temps réel
-- **Gestion orientation** : réinitialisation correcte lors d'un changement d'orientation
+- **Couverture complète** : le backdrop du modal couvre tout l'écran (`position: fixed` + `inset: 0`) pour masquer le fond du board
+- **Overlay adaptatif** : overlay plus sombre (`rgba(0,0,0,0.7-0.8)`) quand le clavier est ouvert pour mieux masquer l'arrière-plan
+- **Variables CSS dynamiques** :
+  - `--visual-viewport-height` : hauteur visible du viewport (mise à jour en temps réel)
+  - `--keyboard-height` : hauteur du clavier calculée dynamiquement pour ajuster le `margin-bottom`
+- **Blocage scroll body** : le scroll du body est désactivé quand le clavier est ouvert pour éviter les déplacements indésirables
+- **Gestion orientation** : réinitialisation correcte de l'état du clavier lors d'un changement d'orientation
 
 ---
 
@@ -252,5 +257,8 @@ const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégor
 - Le fitBounds se déclenche uniquement quand on passe de 0 à >0 marqueurs, ou explicitement
 - L'auto-complétion a un debounce de 500ms pour limiter les appels API
 - Les images uploadées sont stockées en Base64, attention à la limite de 5Mo du localStorage
-- La variable CSS `--visual-viewport-height` est définie sur `:root` par JavaScript pour gérer la hauteur visible sur mobile
+- Variables CSS définies sur `:root` par JavaScript pour la gestion mobile :
+  - `--visual-viewport-height` : hauteur visible du viewport
+  - `--keyboard-height` : hauteur du clavier (pour calculer le `margin-bottom` du modal)
 - Sur mobile, les modals utilisent `.keyboard-open` quand le clavier est détecté (hauteur réduite > 150px)
+- Le modal mobile utilise `position: fixed` avec `inset: 0` pour couvrir tout l'écran et masquer le board
