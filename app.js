@@ -1829,12 +1829,16 @@ function renderAddCardLabelSelector() {
   if (!container) return;
 
   const searchInput = document.getElementById('addCardLabelSearch');
-  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const query = searchInput ? searchInput.value.trim() : '';
+  const queryLower = query.toLowerCase();
 
   // Filter labels based on search
   const filteredLabels = customLabels.filter(label =>
-    label.name.toLowerCase().includes(query)
+    label.name.toLowerCase().includes(queryLower)
   );
+
+  // Check if exact match exists
+  const exactMatch = customLabels.find(label => label.name.toLowerCase() === queryLower);
 
   // Build selected labels display
   const selectedContainer = document.getElementById('addCardSelectedLabels');
@@ -1857,10 +1861,20 @@ function renderAddCardLabelSelector() {
   if (suggestionsContainer) {
     suggestionsContainer.innerHTML = '';
 
+    // Show "Create" option if query exists and no exact match
+    if (query && !exactMatch) {
+      const createItem = document.createElement('div');
+      createItem.className = 'label-suggestion-item label-create-item';
+      createItem.innerHTML = `
+        <i class="fas fa-plus"></i>
+        <span class="label-suggestion-name">Créer "<strong>${escapeHtml(query)}</strong>"</span>
+      `;
+      createItem.onclick = () => quickCreateLabel(query, 'addCard');
+      suggestionsContainer.appendChild(createItem);
+    }
+
     if (filteredLabels.length === 0 && query === '') {
-      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette. Créez-en une via le menu "..."</div>';
-    } else if (filteredLabels.length === 0) {
-      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette trouvée</div>';
+      suggestionsContainer.innerHTML += '<div class="label-suggestion-empty">Aucune étiquette. Tapez un nom pour en créer une.</div>';
     } else {
       filteredLabels.forEach(label => {
         const isSelected = selectedLabels.includes(label.id);
@@ -1884,12 +1898,16 @@ function renderDetailLabelSelector() {
   if (!container) return;
 
   const searchInput = document.getElementById('detailLabelSearch');
-  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const query = searchInput ? searchInput.value.trim() : '';
+  const queryLower = query.toLowerCase();
 
   // Filter labels based on search
   const filteredLabels = customLabels.filter(label =>
-    label.name.toLowerCase().includes(query)
+    label.name.toLowerCase().includes(queryLower)
   );
+
+  // Check if exact match exists
+  const exactMatch = customLabels.find(label => label.name.toLowerCase() === queryLower);
 
   // Build selected labels display
   const selectedContainer = document.getElementById('detailSelectedLabels');
@@ -1912,10 +1930,20 @@ function renderDetailLabelSelector() {
   if (suggestionsContainer) {
     suggestionsContainer.innerHTML = '';
 
+    // Show "Create" option if query exists and no exact match
+    if (query && !exactMatch) {
+      const createItem = document.createElement('div');
+      createItem.className = 'label-suggestion-item label-create-item';
+      createItem.innerHTML = `
+        <i class="fas fa-plus"></i>
+        <span class="label-suggestion-name">Créer "<strong>${escapeHtml(query)}</strong>"</span>
+      `;
+      createItem.onclick = () => quickCreateLabel(query, 'detail');
+      suggestionsContainer.appendChild(createItem);
+    }
+
     if (filteredLabels.length === 0 && query === '') {
-      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette. Créez-en une via le menu "..."</div>';
-    } else if (filteredLabels.length === 0) {
-      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette trouvée</div>';
+      suggestionsContainer.innerHTML += '<div class="label-suggestion-empty">Aucune étiquette. Tapez un nom pour en créer une.</div>';
     } else {
       filteredLabels.forEach(label => {
         const isSelected = detailSelectedLabels.includes(label.id);
@@ -1941,6 +1969,32 @@ function handleAddCardLabelSearch() {
 // Handle label search input for detail modal
 function handleDetailLabelSearch() {
   renderDetailLabelSelector();
+}
+
+// Quick create a label from the search field
+function quickCreateLabel(name, mode) {
+  // Pick a random color from the palette
+  const randomColor = PALETTE_COLORS[Math.floor(Math.random() * PALETTE_COLORS.length)];
+
+  // Create the new label
+  const newId = customLabels.length > 0 ? Math.max(...customLabels.map(l => l.id)) + 1 : 1;
+  const newLabel = { id: newId, name: name.trim(), color: randomColor };
+  customLabels.push(newLabel);
+  saveCustomLabels();
+
+  // Auto-select the new label
+  if (mode === 'addCard') {
+    selectedLabels.push(newId);
+    document.getElementById('addCardLabelSearch').value = '';
+    renderAddCardLabelSelector();
+  } else if (mode === 'detail') {
+    detailSelectedLabels.push(newId);
+    document.getElementById('detailLabelSearch').value = '';
+    renderDetailLabelSelector();
+  }
+
+  // Update board to reflect new label if used elsewhere
+  renderBoard();
 }
 
 // -------------------------
