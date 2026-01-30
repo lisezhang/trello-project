@@ -4,8 +4,19 @@
 let currentListId = null;
 let currentCardId = null;
 
-let selectedLabels = [];
-let detailSelectedLabels = [];
+let selectedLabels = [];        // IDs of selected labels for add card modal
+let detailSelectedLabels = [];  // IDs of selected labels for detail modal
+
+// Custom labels system
+let customLabels = [];          // Array of { id, name, color }
+const STORAGE_CUSTOM_LABELS = 'trelloCustomLabels';
+
+// Default palette colors for creating new labels
+const PALETTE_COLORS = [
+  '#FF6B6B', '#FFA500', '#FFD93D', '#6BCB77', '#4D96FF',
+  '#9D4EDD', '#FF006E', '#00F5FF', '#8B5CF6', '#EC4899',
+  '#14B8A6', '#F97316', '#84CC16', '#06B6D4', '#A855F7'
+];
 
 let map = null;
 let markers = {};               // markers[cardId] = L.marker
@@ -36,17 +47,6 @@ const FIT_MAX_ZOOM = 8;
 
 // Track marker count for fitBounds trigger
 let lastMarkerCount = 0;
-
-const labelColors = {
-  '#FF6B6B': 'Rouge',
-  '#FFA500': 'Orange',
-  '#FFD93D': 'Jaune',
-  '#6BCB77': 'Vert',
-  '#4D96FF': 'Bleu',
-  '#9D4EDD': 'Violet',
-  '#FF006E': 'Rose',
-  '#00F5FF': 'Cyan'
-};
 
 let lists = [];
 let cards = [];
@@ -81,13 +81,24 @@ function init() {
 function loadData() {
   const savedLists = localStorage.getItem('trelloLists');
   const savedCards = localStorage.getItem('trelloCards');
+  const savedLabels = localStorage.getItem(STORAGE_CUSTOM_LABELS);
   if (savedLists) lists = JSON.parse(savedLists);
   if (savedCards) cards = JSON.parse(savedCards);
+  if (savedLabels) customLabels = JSON.parse(savedLabels);
 }
 
 function saveData() {
   localStorage.setItem('trelloLists', JSON.stringify(lists));
   localStorage.setItem('trelloCards', JSON.stringify(cards));
+}
+
+function saveCustomLabels() {
+  localStorage.setItem(STORAGE_CUSTOM_LABELS, JSON.stringify(customLabels));
+}
+
+// Get label by ID
+function getLabelById(id) {
+  return customLabels.find(l => l.id === id);
 }
 
 // -------------------------
@@ -208,12 +219,15 @@ function createCardElement(card) {
 
   const labelsDiv = document.createElement('div');
   labelsDiv.className = 'card-labels';
-  (card.labels || []).forEach(labelColor => {
-    const label = document.createElement('div');
-    label.className = 'label';
-    label.style.backgroundColor = labelColor;
-    label.textContent = labelColors[labelColor] || 'Label';
-    labelsDiv.appendChild(label);
+  (card.labels || []).forEach(labelId => {
+    const labelData = getLabelById(labelId);
+    if (labelData) {
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.style.backgroundColor = labelData.color;
+      label.textContent = labelData.name;
+      labelsDiv.appendChild(label);
+    }
   });
 
   const infoDiv = document.createElement('div');
@@ -366,7 +380,7 @@ function openAddCardModal() {
   document.getElementById('cardDescriptionInput').value = '';
   document.getElementById('cardAddressInput').value = '';
   document.getElementById('cardDueDateInput').value = '';
-  document.querySelectorAll('#labelPicker .color-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('addCardLabelSearch').value = '';
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardChecklistContainer').innerHTML = '';
@@ -379,6 +393,9 @@ function openAddCardModal() {
 
   document.getElementById('addCardModal').classList.add('show');
   document.getElementById('cardTitleInput').focus();
+
+  // Initialize label selector
+  renderAddCardLabelSelector();
 }
 
 function closeAddCardModal() {
@@ -391,11 +408,26 @@ function closeAddCardModal() {
   addCardCoverImage = null;
 }
 
-function toggleColor(element, color) {
-  element.classList.toggle('selected');
-  const idx = selectedLabels.indexOf(color);
-  if (idx > -1) selectedLabels.splice(idx, 1);
-  else selectedLabels.push(color);
+// Toggle label selection for add card modal
+function toggleLabelSelection(labelId) {
+  const idx = selectedLabels.indexOf(labelId);
+  if (idx > -1) {
+    selectedLabels.splice(idx, 1);
+  } else {
+    selectedLabels.push(labelId);
+  }
+  renderAddCardLabelSelector();
+}
+
+// Toggle label selection for detail modal
+function toggleDetailLabelSelection(labelId) {
+  const idx = detailSelectedLabels.indexOf(labelId);
+  if (idx > -1) {
+    detailSelectedLabels.splice(idx, 1);
+  } else {
+    detailSelectedLabels.push(labelId);
+  }
+  renderDetailLabelSelector();
 }
 
 function addCardChecklistItem() {
@@ -519,6 +551,11 @@ function openCardDetailModal(card) {
   document.getElementById('detailUrlInputContainer').style.display = 'none';
   document.getElementById('detailImageUrlInput').value = '';
 
+  // Reset labels input panel
+  document.getElementById('detailLabelsInput').style.display = 'none';
+  document.getElementById('detailLabels').style.display = 'flex';
+  document.getElementById('detailLabelSearch').value = '';
+
   renderDetailLabels(card);
   renderChecklist(card);
   renderHistory(card);
@@ -558,25 +595,21 @@ function renderDetailLabels(card) {
   labelsContainer.innerHTML = '';
 
   if (card.labels && card.labels.length > 0) {
-    card.labels.forEach(labelColor => {
-      const label = document.createElement('div');
-      label.className = 'label';
-      label.style.backgroundColor = labelColor;
-      label.textContent = labelColors[labelColor] || 'Label';
-      labelsContainer.appendChild(label);
+    card.labels.forEach(labelId => {
+      const labelData = getLabelById(labelId);
+      if (labelData) {
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.style.backgroundColor = labelData.color;
+        label.textContent = labelData.name;
+        labelsContainer.appendChild(label);
+      }
     });
     labelsContainer.className = 'card-detail-value';
   } else {
     labelsContainer.textContent = '(Aucune étiquette)';
     labelsContainer.className = 'card-detail-value empty';
   }
-
-  document.querySelectorAll('#detailLabelsInput .color-option').forEach(el => el.classList.remove('selected'));
-  (card.labels || []).forEach(color => {
-    document.querySelectorAll('#detailLabelsInput .color-option').forEach(el => {
-      if (rgbToHex(el.style.backgroundColor) === color.toLowerCase()) el.classList.add('selected');
-    });
-  });
 }
 
 function rgbToHex(rgb) {
@@ -590,24 +623,18 @@ function rgbToHex(rgb) {
   return `#${r}${g}${b}`.toLowerCase();
 }
 
-function toggleDetailColor(element, color) {
-  element.classList.toggle('selected');
-  const idx = detailSelectedLabels.indexOf(color);
-  if (idx > -1) detailSelectedLabels.splice(idx, 1);
-  else detailSelectedLabels.push(color);
-}
-
 function editCardField(field) {
   const valueDiv = document.getElementById(`detail${field.charAt(0).toUpperCase() + field.slice(1)}`);
   const inputElement = document.getElementById(`detail${field.charAt(0).toUpperCase() + field.slice(1)}Input`);
 
   if (!inputElement) return;
 
-  // Labels: show panel instead of input
+  // Labels: show label selector panel
   if (field === 'labels') {
     const panel = document.getElementById('detailLabelsInput');
     valueDiv.style.display = 'none';
     panel.style.display = 'block';
+    renderDetailLabelSelector();
     return;
   }
 
@@ -1234,6 +1261,7 @@ window.onmouseup = (event) => {
   const addCardModal = document.getElementById('addCardModal');
   const cardDetailModal = document.getElementById('cardDetailModal');
   const deleteListModal = document.getElementById('deleteListModal');
+  const labelsManagementModal = document.getElementById('labelsManagementModal');
 
   const addressAutocomplete = document.getElementById('addressAutocomplete');
 
@@ -1241,6 +1269,7 @@ window.onmouseup = (event) => {
   if (event.target === addCardModal) closeAddCardModal();
   if (event.target === cardDetailModal) closeCardDetailModal();
   if (event.target === deleteListModal) closeDeleteListModal();
+  if (event.target === labelsManagementModal) closeLabelsManagementModal();
 
   if (!event.target.closest('.form-group-relative') && addressAutocomplete) {
     addressAutocomplete.style.display = 'none';
@@ -1789,6 +1818,307 @@ function initMobileKeyboardHandler() {
 
 // Initialize mobile keyboard handler when DOM is ready
 document.addEventListener('DOMContentLoaded', initMobileKeyboardHandler);
+
+// -------------------------
+// Custom Labels Management
+// -------------------------
+
+// Render label selector for Add Card modal
+function renderAddCardLabelSelector() {
+  const container = document.getElementById('addCardLabelSelector');
+  if (!container) return;
+
+  const searchInput = document.getElementById('addCardLabelSearch');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  // Filter labels based on search
+  const filteredLabels = customLabels.filter(label =>
+    label.name.toLowerCase().includes(query)
+  );
+
+  // Build selected labels display
+  const selectedContainer = document.getElementById('addCardSelectedLabels');
+  if (selectedContainer) {
+    selectedContainer.innerHTML = '';
+    selectedLabels.forEach(labelId => {
+      const label = getLabelById(labelId);
+      if (label) {
+        const badge = document.createElement('span');
+        badge.className = 'selected-label-badge';
+        badge.style.backgroundColor = label.color;
+        badge.innerHTML = `${escapeHtml(label.name)} <button type="button" onclick="toggleLabelSelection(${label.id})">&times;</button>`;
+        selectedContainer.appendChild(badge);
+      }
+    });
+  }
+
+  // Build suggestions list
+  const suggestionsContainer = document.getElementById('addCardLabelSuggestions');
+  if (suggestionsContainer) {
+    suggestionsContainer.innerHTML = '';
+
+    if (filteredLabels.length === 0 && query === '') {
+      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette. Créez-en une via le menu "..."</div>';
+    } else if (filteredLabels.length === 0) {
+      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette trouvée</div>';
+    } else {
+      filteredLabels.forEach(label => {
+        const isSelected = selectedLabels.includes(label.id);
+        const item = document.createElement('div');
+        item.className = 'label-suggestion-item' + (isSelected ? ' selected' : '');
+        item.innerHTML = `
+          <span class="label-suggestion-color" style="background-color: ${label.color}"></span>
+          <span class="label-suggestion-name">${escapeHtml(label.name)}</span>
+          ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+        `;
+        item.onclick = () => toggleLabelSelection(label.id);
+        suggestionsContainer.appendChild(item);
+      });
+    }
+  }
+}
+
+// Render label selector for Detail modal
+function renderDetailLabelSelector() {
+  const container = document.getElementById('detailLabelsInput');
+  if (!container) return;
+
+  const searchInput = document.getElementById('detailLabelSearch');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  // Filter labels based on search
+  const filteredLabels = customLabels.filter(label =>
+    label.name.toLowerCase().includes(query)
+  );
+
+  // Build selected labels display
+  const selectedContainer = document.getElementById('detailSelectedLabels');
+  if (selectedContainer) {
+    selectedContainer.innerHTML = '';
+    detailSelectedLabels.forEach(labelId => {
+      const label = getLabelById(labelId);
+      if (label) {
+        const badge = document.createElement('span');
+        badge.className = 'selected-label-badge';
+        badge.style.backgroundColor = label.color;
+        badge.innerHTML = `${escapeHtml(label.name)} <button type="button" onclick="toggleDetailLabelSelection(${label.id})">&times;</button>`;
+        selectedContainer.appendChild(badge);
+      }
+    });
+  }
+
+  // Build suggestions list
+  const suggestionsContainer = document.getElementById('detailLabelSuggestions');
+  if (suggestionsContainer) {
+    suggestionsContainer.innerHTML = '';
+
+    if (filteredLabels.length === 0 && query === '') {
+      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette. Créez-en une via le menu "..."</div>';
+    } else if (filteredLabels.length === 0) {
+      suggestionsContainer.innerHTML = '<div class="label-suggestion-empty">Aucune étiquette trouvée</div>';
+    } else {
+      filteredLabels.forEach(label => {
+        const isSelected = detailSelectedLabels.includes(label.id);
+        const item = document.createElement('div');
+        item.className = 'label-suggestion-item' + (isSelected ? ' selected' : '');
+        item.innerHTML = `
+          <span class="label-suggestion-color" style="background-color: ${label.color}"></span>
+          <span class="label-suggestion-name">${escapeHtml(label.name)}</span>
+          ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+        `;
+        item.onclick = () => toggleDetailLabelSelection(label.id);
+        suggestionsContainer.appendChild(item);
+      });
+    }
+  }
+}
+
+// Handle label search input for add card modal
+function handleAddCardLabelSearch() {
+  renderAddCardLabelSelector();
+}
+
+// Handle label search input for detail modal
+function handleDetailLabelSearch() {
+  renderDetailLabelSelector();
+}
+
+// -------------------------
+// Labels Management Modal
+// -------------------------
+let editingLabelId = null;
+
+function openLabelsManagementModal() {
+  document.getElementById('labelsManagementModal').classList.add('show');
+  editingLabelId = null;
+  renderLabelsManagementList();
+  resetLabelForm();
+  closeCardOptionsMenu();
+}
+
+function closeLabelsManagementModal() {
+  document.getElementById('labelsManagementModal').classList.remove('show');
+  editingLabelId = null;
+}
+
+function renderLabelsManagementList() {
+  const container = document.getElementById('labelsManagementList');
+  container.innerHTML = '';
+
+  if (customLabels.length === 0) {
+    container.innerHTML = '<div class="labels-empty">Aucune étiquette créée. Utilisez le formulaire ci-dessus pour en créer une.</div>';
+    return;
+  }
+
+  customLabels.forEach(label => {
+    const item = document.createElement('div');
+    item.className = 'label-management-item';
+    item.innerHTML = `
+      <span class="label-management-preview" style="background-color: ${label.color}">${escapeHtml(label.name)}</span>
+      <div class="label-management-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editLabel(${label.id})">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLabel(${label.id})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function resetLabelForm() {
+  document.getElementById('labelNameInput').value = '';
+  document.getElementById('labelColorInput').value = '#FF6B6B';
+  document.getElementById('labelFormTitle').textContent = 'Nouvelle étiquette';
+  document.getElementById('saveLabelBtn').textContent = 'Créer';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  editingLabelId = null;
+  renderPaletteColors();
+}
+
+function renderPaletteColors() {
+  const container = document.getElementById('labelColorPalette');
+  const currentColor = document.getElementById('labelColorInput').value;
+  container.innerHTML = '';
+
+  PALETTE_COLORS.forEach(color => {
+    const colorBtn = document.createElement('div');
+    colorBtn.className = 'palette-color' + (color.toLowerCase() === currentColor.toLowerCase() ? ' selected' : '');
+    colorBtn.style.backgroundColor = color;
+    colorBtn.onclick = () => selectPaletteColor(color);
+    container.appendChild(colorBtn);
+  });
+}
+
+function selectPaletteColor(color) {
+  document.getElementById('labelColorInput').value = color;
+  renderPaletteColors();
+}
+
+function updatePaletteFromInput() {
+  renderPaletteColors();
+}
+
+function saveLabel() {
+  const name = document.getElementById('labelNameInput').value.trim();
+  const color = document.getElementById('labelColorInput').value;
+
+  if (!name) {
+    alert('Veuillez entrer un nom pour l\'étiquette');
+    return;
+  }
+
+  if (editingLabelId) {
+    // Update existing label
+    const label = getLabelById(editingLabelId);
+    if (label) {
+      label.name = name;
+      label.color = color;
+    }
+  } else {
+    // Create new label
+    const newId = customLabels.length > 0 ? Math.max(...customLabels.map(l => l.id)) + 1 : 1;
+    customLabels.push({ id: newId, name, color });
+  }
+
+  saveCustomLabels();
+  renderLabelsManagementList();
+  renderBoard();
+  resetLabelForm();
+
+  // Refresh label selectors if modal is open
+  if (document.getElementById('cardDetailModal').classList.contains('show')) {
+    renderDetailLabelSelector();
+  }
+}
+
+function editLabel(labelId) {
+  const label = getLabelById(labelId);
+  if (!label) return;
+
+  editingLabelId = labelId;
+  document.getElementById('labelNameInput').value = label.name;
+  document.getElementById('labelColorInput').value = label.color;
+  document.getElementById('labelFormTitle').textContent = 'Modifier l\'étiquette';
+  document.getElementById('saveLabelBtn').textContent = 'Enregistrer';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  renderPaletteColors();
+
+  // Scroll to form
+  document.getElementById('labelNameInput').focus();
+}
+
+function cancelEditLabel() {
+  resetLabelForm();
+}
+
+function deleteLabel(labelId) {
+  const label = getLabelById(labelId);
+  if (!label) return;
+
+  // Count cards using this label
+  const cardsUsingLabel = cards.filter(c => c.labels && c.labels.includes(labelId)).length;
+
+  let message = `Supprimer l'étiquette "${label.name}" ?`;
+  if (cardsUsingLabel > 0) {
+    message += `\n\nAttention: ${cardsUsingLabel} carte(s) utilisent cette étiquette.`;
+  }
+
+  if (!confirm(message)) return;
+
+  // Remove label from all cards
+  cards.forEach(card => {
+    if (card.labels) {
+      card.labels = card.labels.filter(id => id !== labelId);
+    }
+  });
+
+  // Remove from customLabels
+  customLabels = customLabels.filter(l => l.id !== labelId);
+
+  // Remove from selected labels
+  selectedLabels = selectedLabels.filter(id => id !== labelId);
+  detailSelectedLabels = detailSelectedLabels.filter(id => id !== labelId);
+
+  saveCustomLabels();
+  saveData();
+  renderLabelsManagementList();
+  renderBoard();
+
+  // Reset form if we were editing this label
+  if (editingLabelId === labelId) {
+    resetLabelForm();
+  }
+
+  // Refresh label selectors if modal is open
+  if (document.getElementById('cardDetailModal').classList.contains('show')) {
+    const card = cards.find(c => c.id === currentCardId);
+    if (card) renderDetailLabels(card);
+    renderDetailLabelSelector();
+  }
+}
 
 // -------------------------
 // Boot

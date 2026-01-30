@@ -110,7 +110,16 @@ trello-project/
 - **Blocage scroll body** : le scroll du body est désactivé quand le clavier est ouvert pour éviter les déplacements indésirables
 - **Gestion orientation** : réinitialisation correcte de l'état du clavier lors d'un changement d'orientation
 
-### 13. Layout Mobile (Navbar et Listes)
+### 13. Étiquettes Personnalisées
+- **Création d'étiquettes** : nom + couleur personnalisée (palette prédéfinie ou sélecteur de couleur libre)
+- **Gestion via menu "..."** : modal dédiée pour créer, modifier, supprimer les étiquettes
+- **Sélection avec auto-complétion** : champ de recherche pour filtrer les étiquettes existantes
+- **Multi-sélection** : possibilité de sélectionner plusieurs étiquettes par carte
+- **Affichage avec nom** : les étiquettes s'affichent avec leur nom dans une pastille colorée
+- **Réutilisation globale** : les étiquettes créées sont disponibles pour toutes les cartes
+- **Persistance** : stockage dans `trelloCustomLabels` dans localStorage
+
+### 14. Layout Mobile (Navbar et Listes)
 - **Navbar compacte** : sur mobile, la navbar utilise `flex-wrap: nowrap` pour garder une hauteur fixe et prévisible
 - **Hauteurs explicites par breakpoint** :
   - ≤768px (tablettes) : navbar `min-height: 50px`, container `height: calc(100vh - 50px)`
@@ -191,7 +200,7 @@ const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégor
   listId: number,
   title: string,
   description: string,
-  labels: string[],        // Couleurs hex
+  labels: number[],        // IDs des étiquettes personnalisées
   address: string,
   coordinates: { lat: number, lon: number } | null,
   dueDate: string,
@@ -203,6 +212,15 @@ const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégor
 }
 ```
 
+### Étiquette Personnalisée
+```javascript
+{
+  id: number,
+  name: string,           // Nom de l'étiquette (ex: "Restaurant", "Shopping")
+  color: string           // Couleur hex (ex: "#FF6B6B")
+}
+```
+
 ---
 
 ## Clés localStorage
@@ -211,6 +229,7 @@ const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégor
 |-----|---------|
 | `trelloLists` | JSON des listes |
 | `trelloCards` | JSON des cartes |
+| `trelloCustomLabels` | JSON des étiquettes personnalisées |
 | `trelloActiveView` | 'board' ou 'map' |
 | `trelloMapView` | `{ lat, lng, zoom }` |
 

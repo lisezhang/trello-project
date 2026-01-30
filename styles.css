@@ -924,6 +924,224 @@ body {
   flex-shrink: 0;
 }
 
+/* Custom Labels - Selector */
+.label-selector {
+  position: relative;
+}
+
+.selected-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  min-height: 10px;
+}
+
+.selected-label-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.selected-label-badge button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+.selected-label-badge button:hover {
+  color: #fff;
+}
+
+.label-search-input {
+  margin-bottom: 0 !important;
+}
+
+.label-suggestions {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background: #fff;
+}
+
+.label-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.label-suggestion-item:hover {
+  background: #f5f5f5;
+}
+
+.label-suggestion-item.selected {
+  background: #e8f0fe;
+}
+
+.label-suggestion-item i {
+  margin-left: auto;
+  color: #667eea;
+}
+
+.label-suggestion-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.label-suggestion-name {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.label-suggestion-empty {
+  padding: 15px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Custom Labels - Management Modal */
+.label-form-section {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.label-form-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.label-color-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.label-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.palette-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.palette-color:hover {
+  transform: scale(1.1);
+}
+
+.palette-color.selected {
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.label-color-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label-color-custom label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 0 !important;
+}
+
+.label-color-custom input[type="color"] {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.label-form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.labels-list-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.labels-management-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label-management-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.label-management-preview {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label-management-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.labels-empty {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
@@ -1096,6 +1314,41 @@ body {
   #detailMiniMap,
   #addCardMiniMap {
     height: 180px;
+  }
+
+  /* Custom labels on mobile */
+  .label-suggestions {
+    max-height: 150px;
+  }
+
+  .label-color-palette {
+    gap: 6px;
+  }
+
+  .palette-color {
+    width: 28px;
+    height: 28px;
+  }
+
+  .label-color-custom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .label-management-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .label-management-preview {
+    max-width: 100%;
+  }
+
+  .label-management-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 
