@@ -110,6 +110,18 @@ trello-project/
 - **Blocage scroll body** : le scroll du body est désactivé quand le clavier est ouvert pour éviter les déplacements indésirables
 - **Gestion orientation** : réinitialisation correcte de l'état du clavier lors d'un changement d'orientation
 
+### 13. Layout Mobile (Navbar et Listes)
+- **Navbar compacte** : sur mobile, la navbar utilise `flex-wrap: nowrap` pour garder une hauteur fixe et prévisible
+- **Hauteurs explicites par breakpoint** :
+  - ≤768px (tablettes) : navbar `min-height: 50px`, container `height: calc(100vh - 50px)`
+  - ≤480px (mobiles) : navbar `min-height: 46px`, container `height: calc(100vh - 46px)`
+- **Boutons compacts** : les boutons Board/Map sont réduits (`padding: 5px 10px`, `font-size: 11px`) pour tenir sur une ligne
+- **Espacement board-content** : `padding-top: 20px` (768px) / `15px` (480px) pour séparer visuellement les listes de la navbar
+- **Listes adaptatives** :
+  - ≤768px : `min-width/max-width: 260px`, `max-height: calc(100vh - 90px)`
+  - ≤480px : `min-width/max-width: 240px`, `max-height: calc(100vh - 76px)`
+- **Pas de chevauchement** : le calcul précis des hauteurs évite toute superposition entre la navbar et les listes
+
 ---
 
 ## Structure du Code JavaScript
