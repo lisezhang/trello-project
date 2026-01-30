@@ -162,15 +162,14 @@
       <div class="card-detail-section">
         <div class="card-detail-field">
           <label>Étiquettes</label>
-          <div class="color-picker" id="labelPicker">
-            <div class="color-option" style="background-color:#FF6B6B" onclick="toggleColor(this,'#FF6B6B')"></div>
-            <div class="color-option" style="background-color:#FFA500" onclick="toggleColor(this,'#FFA500')"></div>
-            <div class="color-option" style="background-color:#FFD93D" onclick="toggleColor(this,'#FFD93D')"></div>
-            <div class="color-option" style="background-color:#6BCB77" onclick="toggleColor(this,'#6BCB77')"></div>
-            <div class="color-option" style="background-color:#4D96FF" onclick="toggleColor(this,'#4D96FF')"></div>
-            <div class="color-option" style="background-color:#9D4EDD" onclick="toggleColor(this,'#9D4EDD')"></div>
-            <div class="color-option" style="background-color:#FF006E" onclick="toggleColor(this,'#FF006E')"></div>
-            <div class="color-option" style="background-color:#00F5FF" onclick="toggleColor(this,'#00F5FF')"></div>
+          <div class="label-selector" id="addCardLabelSelector">
+            <div class="selected-labels" id="addCardSelectedLabels"></div>
+            <input type="text" class="card-detail-input label-search-input" id="addCardLabelSearch"
+                   placeholder="Rechercher ou voir toutes les étiquettes..."
+                   oninput="handleAddCardLabelSearch()"
+                   onfocus="renderAddCardLabelSelector()"
+                   autocomplete="off">
+            <div class="label-suggestions" id="addCardLabelSuggestions"></div>
           </div>
         </div>
       </div>
@@ -223,6 +222,9 @@
               <i class="fas fa-ellipsis-h"></i>
             </button>
             <div class="dropdown-menu" id="cardOptionsMenu">
+              <div class="dropdown-item" onclick="openLabelsManagementModal()">
+                <i class="fas fa-tags"></i> Gérer les étiquettes
+              </div>
               <div class="dropdown-item" id="removeCoverImageOption" onclick="removeCoverImage(); closeCardOptionsMenu();" style="display:none;">
                 <i class="fas fa-image"></i> Supprimer l'image de couverture
               </div>
@@ -289,17 +291,14 @@
         <div class="card-detail-field">
           <label>Étiquettes</label>
           <div class="card-detail-value" id="detailLabels" onclick="editCardField('labels')" style="flex-wrap:wrap;gap:5px;"></div>
-          <div id="detailLabelsInput" style="display:none;">
-            <div class="color-picker">
-              <div class="color-option" style="background-color:#FF6B6B" onclick="toggleDetailColor(this,'#FF6B6B')"></div>
-              <div class="color-option" style="background-color:#FFA500" onclick="toggleDetailColor(this,'#FFA500')"></div>
-              <div class="color-option" style="background-color:#FFD93D" onclick="toggleDetailColor(this,'#FFD93D')"></div>
-              <div class="color-option" style="background-color:#6BCB77" onclick="toggleDetailColor(this,'#6BCB77')"></div>
-              <div class="color-option" style="background-color:#4D96FF" onclick="toggleDetailColor(this,'#4D96FF')"></div>
-              <div class="color-option" style="background-color:#9D4EDD" onclick="toggleDetailColor(this,'#9D4EDD')"></div>
-              <div class="color-option" style="background-color:#FF006E" onclick="toggleDetailColor(this,'#FF006E')"></div>
-              <div class="color-option" style="background-color:#00F5FF" onclick="toggleDetailColor(this,'#00F5FF')"></div>
-            </div>
+          <div id="detailLabelsInput" class="label-selector" style="display:none;">
+            <div class="selected-labels" id="detailSelectedLabels"></div>
+            <input type="text" class="card-detail-input label-search-input" id="detailLabelSearch"
+                   placeholder="Rechercher ou voir toutes les étiquettes..."
+                   oninput="handleDetailLabelSearch()"
+                   onfocus="renderDetailLabelSelector()"
+                   autocomplete="off">
+            <div class="label-suggestions" id="detailLabelSuggestions"></div>
             <button class="btn btn-primary" style="margin-top:10px;width:100%;" onclick="saveCardField(null,'labels')">Valider</button>
           </div>
         </div>
@@ -342,6 +341,45 @@
         <div id="historyContainer" style="max-height:250px;overflow-y:auto;"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Labels Management Modal -->
+  <div class="modal" id="labelsManagementModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Gérer les étiquettes</h2>
+        <button class="close-modal" onclick="closeLabelsManagementModal()">&times;</button>
+      </div>
+
+      <!-- Label Creation/Edit Form -->
+      <div class="label-form-section">
+        <h3 id="labelFormTitle">Nouvelle étiquette</h3>
+        <div class="form-group">
+          <label for="labelNameInput">Nom de l'étiquette</label>
+          <input type="text" id="labelNameInput" placeholder="Ex: Restaurant, Shopping, À visiter...">
+        </div>
+        <div class="form-group">
+          <label>Couleur</label>
+          <div class="label-color-section">
+            <div class="label-color-palette" id="labelColorPalette"></div>
+            <div class="label-color-custom">
+              <label for="labelColorInput">Ou choisir une couleur personnalisée :</label>
+              <input type="color" id="labelColorInput" value="#FF6B6B" onchange="updatePaletteFromInput()">
+            </div>
+          </div>
+        </div>
+        <div class="label-form-buttons">
+          <button class="btn btn-primary" id="saveLabelBtn" onclick="saveLabel()">Créer</button>
+          <button class="btn btn-secondary" id="cancelEditBtn" style="display:none;" onclick="cancelEditLabel()">Annuler</button>
+        </div>
+      </div>
+
+      <!-- Existing Labels List -->
+      <div class="labels-list-section">
+        <h3>Étiquettes existantes</h3>
+        <div id="labelsManagementList" class="labels-management-list"></div>
+      </div>
     </div>
   </div>
 
