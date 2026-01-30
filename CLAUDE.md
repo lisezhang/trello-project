@@ -97,6 +97,14 @@ trello-project/
 - Vue active (board/map) persistée
 - Dernière position de la carte (centre + zoom) persistée
 
+### 12. Gestion Mobile (Clavier Virtuel)
+- **Détection du clavier** : utilise l'API `visualViewport` (iOS/Android) avec fallback sur `window.resize`
+- **Scroll automatique** : centre le champ focusé une seule fois à l'ouverture du clavier
+- **Scroll manuel libre** : après le centrage initial, l'utilisateur peut scroller librement pour voir le haut (image) ou le bas de la modal
+- **Modal alignée en haut** : sur mobile, la modal reste en haut de l'écran (pas centrée) même après fermeture du clavier
+- **Hauteur dynamique** : variable CSS `--visual-viewport-height` mise à jour en temps réel
+- **Gestion orientation** : réinitialisation correcte lors d'un changement d'orientation
+
 ---
 
 ## Structure du Code JavaScript
@@ -136,6 +144,7 @@ let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 | `removeCoverImage()` | Supprime l'image de couverture |
 | `handleImageUpload(input, mode)` | Gère l'upload de fichier image |
 | `applyImageUrl(mode)` | Applique une image depuis URL |
+| `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
 
 ### Constantes de Configuration
 ```javascript
@@ -243,3 +252,5 @@ const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégor
 - Le fitBounds se déclenche uniquement quand on passe de 0 à >0 marqueurs, ou explicitement
 - L'auto-complétion a un debounce de 500ms pour limiter les appels API
 - Les images uploadées sont stockées en Base64, attention à la limite de 5Mo du localStorage
+- La variable CSS `--visual-viewport-height` est définie sur `:root` par JavaScript pour gérer la hauteur visible sur mobile
+- Sur mobile, les modals utilisent `.keyboard-open` quand le clavier est détecté (hauteur réduite > 150px)
