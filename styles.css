@@ -927,13 +927,15 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
-    padding: 10px;
+    padding: 10px 15px;
+    min-height: 50px;
   }
 
   .navbar-brand {
     font-size: 20px;
+    flex-shrink: 0;
   }
 
   .navbar-brand span {
@@ -941,12 +943,33 @@ body {
   }
 
   .navbar-controls {
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .view-toggle button {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .dropdown-toggle {
+    padding: 5px 10px;
+  }
+
+  /* Adjust container to account for mobile navbar */
+  .container {
+    height: calc(100vh - 50px);
+  }
+
+  .board-content {
+    padding: 15px 10px;
+    padding-top: 20px;
   }
 
   .list-container {
     min-width: 260px;
     max-width: 260px;
+    max-height: calc(100vh - 90px);
   }
 
   .modal-content {
@@ -1078,6 +1101,42 @@ body {
 
 /* Extra small devices */
 @media (max-width: 480px) {
+  .navbar {
+    padding: 8px 10px;
+    gap: 8px;
+    min-height: 46px;
+  }
+
+  .navbar-brand {
+    font-size: 18px;
+  }
+
+  .view-toggle button {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .dropdown-toggle {
+    padding: 4px 8px;
+  }
+
+  .container {
+    height: calc(100vh - 46px);
+  }
+
+  .board-content {
+    padding: 10px 8px;
+    padding-top: 15px;
+    gap: 15px;
+  }
+
+  .list-container {
+    min-width: 240px;
+    max-width: 240px;
+    max-height: calc(100vh - 76px);
+    padding: 12px;
+  }
+
   .modal.show {
     padding: 0;
     /* Ensure full coverage on small screens too */
