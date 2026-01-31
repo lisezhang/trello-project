@@ -1093,6 +1093,13 @@ function escapeHtml(s) {
 // -------------------------
 function initOrUpdateDetailMiniMap(card) {
   const container = document.getElementById('detailMiniMapContainer');
+
+  // Vérifier si la carte a des coordonnées valides
+  if (!card.coordinates || typeof card.coordinates.lat !== 'number' || typeof card.coordinates.lon !== 'number') {
+    container.style.display = 'none';
+    return;
+  }
+
   container.style.display = 'block';
 
   // Force a reflow to ensure container is visible
