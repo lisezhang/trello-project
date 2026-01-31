@@ -104,17 +104,19 @@ trello-project/
 - **Scroll manuel libre** : l'utilisateur peut scroller librement pour voir le haut (image de couverture) ou le bas de la modal à tout moment
 - **Pas de scroll agressif** : contrairement à un centrage forcé, le système ne scroll que si nécessaire pour rendre l'input visible
 - **Modal alignée en haut** : sur mobile, la modal reste en haut de l'écran (pas centrée) même après fermeture du clavier
-- **Couverture complète** : le backdrop du modal couvre tout l'écran (`position: fixed` + `inset: 0`) pour masquer le fond du board
-- **Overlay adaptatif** : overlay plus sombre (`rgba(0,0,0,0.75-0.8)`) quand le clavier est ouvert pour mieux masquer l'arrière-plan
+- **Couverture complète garantie** : le backdrop du modal couvre TOUJOURS tout l'écran avec `position: fixed` + `top/left/right/bottom: 0` + `width: 100vw` + `height: 100vh`
+- **Hauteur fixe du modal** : le modal garde `height: 100vh` même quand le clavier est ouvert (ne jamais utiliser `--visual-viewport-height` pour la hauteur du modal, sinon le fond du board apparaît)
+- **Overlay adaptatif** : overlay plus sombre (`rgba(0,0,0,0.7)` normal, `rgba(0,0,0,0.85-0.9)` avec clavier) pour masquer l'arrière-plan
 - **Variables CSS dynamiques** :
-  - `--visual-viewport-height` : hauteur visible du viewport (mise à jour en temps réel)
+  - `--visual-viewport-height` : hauteur visible du viewport (pour calculs internes uniquement)
   - `--visual-viewport-offset` : décalage du viewport (utile sur iOS Safari)
-  - `--keyboard-height` : hauteur du clavier calculée dynamiquement pour ajuster le `margin-bottom`
-- **Hauteur dynamique du modal** : utilise `100dvh` et `-webkit-fill-available` pour iOS Safari
-- **Padding généreux** : `padding-bottom` et `margin-bottom` importants sur le modal-content pour permettre de scroller tout le contenu au-dessus du clavier
+  - `--keyboard-height` : hauteur du clavier calculée dynamiquement pour ajuster le `margin-bottom` du contenu
+- **Padding généreux** : `padding-bottom` (60-70px) et `margin-bottom` (keyboard-height + 80-100px) sur le modal-content pour permettre de scroller tout le contenu au-dessus du clavier
 - **Blocage scroll body** : le scroll du body et du html est désactivé quand le clavier est ouvert
 - **Gestion orientation** : réinitialisation correcte de l'état du clavier lors d'un changement d'orientation
-- **MutationObserver** : recalcul de la hauteur initiale à l'ouverture d'un modal (gère le cas où la barre d'adresse était visible)
+- **MutationObserver** : reset du scroll à 0 et recalcul de la hauteur initiale à l'ouverture d'un modal
+- **Fermeture des autres modals** : à l'ouverture d'un modal, les autres modals sont automatiquement fermés pour éviter les superpositions
+- **Focus différé** : délai de 100ms avant de mettre le focus sur l'input pour laisser le modal se rendre correctement
 
 ### 13. Étiquettes Personnalisées
 - **Création d'étiquettes** : nom + couleur personnalisée (palette prédéfinie ou sélecteur de couleur libre)
@@ -317,12 +319,14 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 - L'auto-complétion a un debounce de 500ms pour limiter les appels API
 - Les images uploadées sont stockées en Base64, attention à la limite de 5Mo du localStorage
 - Variables CSS définies sur `:root` par JavaScript pour la gestion mobile :
-  - `--visual-viewport-height` : hauteur visible du viewport
+  - `--visual-viewport-height` : hauteur visible du viewport (NE PAS utiliser pour la hauteur du modal !)
   - `--visual-viewport-offset` : décalage du viewport (iOS Safari)
-  - `--keyboard-height` : hauteur du clavier (pour calculer le `margin-bottom` du modal)
+  - `--keyboard-height` : hauteur du clavier (pour calculer le `margin-bottom` du contenu)
 - Sur mobile, les modals utilisent `.keyboard-open` quand le clavier est détecté (hauteur réduite > 150px)
-- Le modal mobile utilise `position: fixed` avec `inset: 0` pour couvrir tout l'écran et masquer le board
+- **IMPORTANT iOS Safari** : le modal doit TOUJOURS garder `height: 100vh` même avec le clavier ouvert. Si on utilise `--visual-viewport-height` pour la hauteur, le fond du board apparaît derrière le modal
+- Le modal mobile utilise `position: fixed` avec `top/left/right/bottom: 0` + `width: 100vw` pour couvrir tout l'écran
 - **Scroll intelligent sur iOS** : le scroll vers l'input ne se fait que si l'élément n'est pas dans la zone visible (20%-70% de l'écran), permettant à l'utilisateur de voir le haut de la modal (image de couverture)
-- **MutationObserver** : surveille l'ouverture des modals pour recalculer la hauteur initiale du viewport
+- **MutationObserver** : surveille l'ouverture des modals pour reset le scroll à 0 et recalculer la hauteur initiale du viewport
+- **Fermeture des modals** : `openAddCardModal()` et `openCardDetailModal()` ferment les autres modals avant de s'ouvrir pour éviter les superpositions
 - **Upload d'images iOS** : ne jamais réinitialiser `input.value` avant la fin de `FileReader.readAsDataURL()` car iOS Safari peut invalider la référence au fichier
 - L'état `isImageUploading` doit être vérifié avant toute soumission de formulaire impliquant une image
