@@ -1328,10 +1328,6 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    /* Align content to top */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
   .modal.keyboard-open .modal-content {
@@ -1530,9 +1526,6 @@ body {
   .modal.keyboard-open {
     background: rgba(0, 0, 0, 0.8);
     height: var(--visual-viewport-height, 100vh);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
   .modal.keyboard-open .modal-content {

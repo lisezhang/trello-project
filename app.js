@@ -372,6 +372,10 @@ function deleteCardsAndList() {
 let addCardChecklist = []; // Temporary checklist for new card
 
 function openAddCardModal() {
+  // Close any other open modals first
+  closeCardDetailModal();
+  closeLabelsManagementModal();
+
   selectedLabels = [];
   addCardChecklist = [];
   addCardCoverImage = null;
@@ -391,8 +395,15 @@ function openAddCardModal() {
   document.getElementById('addCardImageUrlInput').value = '';
   window.currentAddressCoordinates = null;
 
-  document.getElementById('addCardModal').classList.add('show');
-  document.getElementById('cardTitleInput').focus();
+  const modal = document.getElementById('addCardModal');
+  modal.classList.add('show');
+  // Reset scroll to top on mobile
+  modal.scrollTop = 0;
+
+  // Small delay before focus to ensure modal is rendered
+  setTimeout(() => {
+    document.getElementById('cardTitleInput').focus();
+  }, 100);
 
   // Initialize label selector
   renderAddCardLabelSelector();
@@ -517,6 +528,10 @@ function saveNewCard() {
 // Card detail modal
 // -------------------------
 function openCardDetailModal(card) {
+  // Close any other open modals first
+  closeAddCardModal();
+  closeLabelsManagementModal();
+
   currentCardId = card.id;
   detailSelectedLabels = [...(card.labels || [])];
 
@@ -566,7 +581,10 @@ function openCardDetailModal(card) {
   renderChecklist(card);
   renderHistory(card);
 
-  document.getElementById('cardDetailModal').classList.add('show');
+  const modal = document.getElementById('cardDetailModal');
+  modal.classList.add('show');
+  // Reset scroll to top on mobile
+  modal.scrollTop = 0;
 
   // Mini-map after modal is visible
   setTimeout(() => initOrUpdateDetailMiniMap(card), 300);
@@ -1931,7 +1949,10 @@ function initMobileKeyboardHandler() {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         const target = mutation.target;
         if (target.classList.contains('modal') && target.classList.contains('show')) {
-          // Modal just opened - recalculate initial height if keyboard is closed
+          // Modal just opened - reset scroll to top
+          target.scrollTop = 0;
+
+          // Recalculate initial height if keyboard is closed
           if (!keyboardOpen) {
             setTimeout(() => {
               initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
