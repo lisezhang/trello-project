@@ -1321,9 +1321,11 @@ body {
   .modal.keyboard-open {
     /* Keep FULL screen coverage - never reduce height */
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
     height: 100vh;
     /* Darker overlay to better hide the background */
     background: rgba(0, 0, 0, 0.85);
@@ -1334,12 +1336,12 @@ body {
   }
 
   .modal.keyboard-open .modal-content {
-    /* Position modal at top with proper spacing */
-    margin-top: 10px;
-    /* Add extra bottom padding so user can scroll to see all content above keyboard */
-    padding-bottom: 60px;
-    /* Large bottom margin ensures content can be scrolled fully into view */
-    margin-bottom: calc(var(--keyboard-height, 0px) + 80px);
+    /* Position modal at top - no extra margin that could get cut off */
+    margin-top: 5px;
+    /* Reasonable bottom padding for last element visibility */
+    padding-bottom: 30px;
+    /* Smaller bottom margin - just enough to scroll content above keyboard */
+    margin-bottom: 20px;
     /* No max-height constraint - let the modal grow */
     max-height: none;
     /* Ensure content doesn't shrink */
@@ -1534,8 +1536,9 @@ body {
   }
 
   .modal.keyboard-open .modal-content {
-    padding-bottom: 70px;
-    margin-bottom: calc(var(--keyboard-height, 0px) + 100px);
+    margin-top: 5px;
+    padding-bottom: 30px;
+    margin-bottom: 20px;
     flex-shrink: 0;
   }
 }
