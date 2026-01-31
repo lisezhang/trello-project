@@ -1276,14 +1276,17 @@ body {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    /* Ensure modal backdrop covers entire screen */
+    /* Ensure modal backdrop covers entire screen - ALWAYS */
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    /* Use dynamic viewport height for iOS Safari */
-    height: 100dvh;
-    height: -webkit-fill-available;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    /* Stronger dark background to hide board */
+    background: rgba(0, 0, 0, 0.7);
   }
 
   .modal-content {
@@ -1316,14 +1319,14 @@ body {
 
   /* When keyboard is open - ensure proper display and scrolling */
   .modal.keyboard-open {
-    /* Keep full screen coverage */
+    /* Keep FULL screen coverage - never reduce height */
     position: fixed;
     inset: 0;
     width: 100%;
-    /* Use visual viewport height when keyboard is open */
-    height: var(--visual-viewport-height, 100vh);
+    height: 100%;
+    height: 100vh;
     /* Darker overlay to better hide the background */
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     /* Ensure we can still scroll within the visible area */
     overflow-y: auto;
     overflow-x: hidden;
@@ -1524,8 +1527,10 @@ body {
 
   /* Keyboard open on small devices */
   .modal.keyboard-open {
-    background: rgba(0, 0, 0, 0.8);
-    height: var(--visual-viewport-height, 100vh);
+    background: rgba(0, 0, 0, 0.9);
+    /* Keep FULL height - never reduce */
+    height: 100%;
+    height: 100vh;
   }
 
   .modal.keyboard-open .modal-content {
