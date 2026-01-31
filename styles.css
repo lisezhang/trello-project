@@ -1176,6 +1176,156 @@ body {
   font-style: italic;
 }
 
+/* Maps Choice Modal */
+.maps-choice-content {
+  max-width: 350px;
+  text-align: center;
+}
+
+.maps-choice-content .modal-header {
+  justify-content: center;
+  position: relative;
+}
+
+.maps-choice-content .modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.maps-choice-content .close-modal {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.maps-choice-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.maps-choice-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.maps-choice-btn i {
+  font-size: 22px;
+}
+
+.maps-choice-btn.google-maps {
+  background: #4285F4;
+  color: #fff;
+}
+
+.maps-choice-btn.google-maps:hover {
+  background: #3367D6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.maps-choice-btn.apple-maps {
+  background: #333;
+  color: #fff;
+}
+
+.maps-choice-btn.apple-maps:hover {
+  background: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Clickable Address Link */
+.address-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #667eea;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  word-break: break-word;
+}
+
+.address-link:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+.address-link i {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Address in detail modal - with open button */
+.address-display-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.address-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.address-open-btn {
+  flex-shrink: 0;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.address-open-btn:hover {
+  background: #5568d3;
+}
+
+.address-open-btn i {
+  font-size: 11px;
+}
+
+/* Popup address link (Leaflet popups) */
+.popup-address-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #667eea;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.popup-address-link:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+.popup-address-link i {
+  font-size: 10px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   /* Bloquer le scroll global sur mobile - seules les listes scrollent */

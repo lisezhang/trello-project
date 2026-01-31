@@ -548,8 +548,32 @@ function openCardDetailModal(card) {
   document.getElementById('detailDate').className = card.dueDate ? 'card-detail-value' : 'card-detail-value empty';
   document.getElementById('detailDateInput').value = card.dueDate || '';
 
-  document.getElementById('detailAddress').textContent = card.address || '(Aucune adresse)';
-  document.getElementById('detailAddress').className = card.address ? 'card-detail-value' : 'card-detail-value empty';
+  // Address display with optional "Open in Maps" button
+  const detailAddressEl = document.getElementById('detailAddress');
+  detailAddressEl.innerHTML = '';
+
+  if (card.address) {
+    const hasCoords = card.coordinates && typeof card.coordinates.lat === 'number' && typeof card.coordinates.lon === 'number';
+
+    if (hasCoords) {
+      // Create container with address text and open button
+      detailAddressEl.innerHTML = `
+        <div class="address-display-container">
+          <span class="address-text">${escapeHtml(card.address)}</span>
+          <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+            <i class="fas fa-external-link-alt"></i> Ouvrir
+          </button>
+        </div>
+      `;
+    } else {
+      detailAddressEl.textContent = card.address;
+    }
+    detailAddressEl.className = 'card-detail-value';
+  } else {
+    detailAddressEl.textContent = '(Aucune adresse)';
+    detailAddressEl.className = 'card-detail-value empty';
+  }
+
   document.getElementById('detailAddressInput').value = card.address || '';
   document.getElementById('detailAddressAutocomplete').style.display = 'none';
 
@@ -699,8 +723,28 @@ function saveCardField(event, field) {
       window.detailAddressCoordinates = null;
     }
 
-    valueDiv.textContent = card.address || '(Aucune adresse)';
-    valueDiv.className = card.address ? 'card-detail-value' : 'card-detail-value empty';
+    // Update address display with optional "Open in Maps" button
+    valueDiv.innerHTML = '';
+    if (card.address) {
+      const hasCoords = card.coordinates && typeof card.coordinates.lat === 'number' && typeof card.coordinates.lon === 'number';
+
+      if (hasCoords) {
+        valueDiv.innerHTML = `
+          <div class="address-display-container">
+            <span class="address-text">${escapeHtml(card.address)}</span>
+            <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+              <i class="fas fa-external-link-alt"></i> Ouvrir
+            </button>
+          </div>
+        `;
+      } else {
+        valueDiv.textContent = card.address;
+      }
+      valueDiv.className = 'card-detail-value';
+    } else {
+      valueDiv.textContent = '(Aucune adresse)';
+      valueDiv.className = 'card-detail-value empty';
+    }
 
     document.getElementById('detailAddressAutocomplete').style.display = 'none';
 
@@ -945,8 +989,15 @@ async function performDetailAddressSearch(query) {
 
         saveData();
 
-        // Update and show address value, hide input
-        valueDiv.textContent = card.address;
+        // Update and show address value with "Open in Maps" button, hide input
+        valueDiv.innerHTML = `
+          <div class="address-display-container">
+            <span class="address-text">${escapeHtml(card.address)}</span>
+            <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+              <i class="fas fa-external-link-alt"></i> Ouvrir
+            </button>
+          </div>
+        `;
         valueDiv.className = 'card-detail-value';
         valueDiv.style.display = 'flex';
         input.style.display = 'none';
@@ -1063,10 +1114,20 @@ function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
   cardsWithCoords.forEach(card => {
     const m = L.marker([card.coordinates.lat, card.coordinates.lon]);
 
+    // Build popup HTML with clickable address link
+    let addressHtml = '';
+    if (card.address) {
+      addressHtml = `
+        <span class="popup-address-link" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+          📍 ${escapeHtml(card.address)} <i class="fas fa-external-link-alt"></i>
+        </span><br>
+      `;
+    }
+
     const popupHtml = `
       <strong>${escapeHtml(card.title)}</strong><br>
       ${card.description ? escapeHtml(card.description) + '<br>' : ''}
-      ${card.address ? '📍 ' + escapeHtml(card.address) + '<br>' : ''}
+      ${addressHtml}
       ${card.dueDate ? '📅 ' + escapeHtml(card.dueDate) : ''}
     `;
 
@@ -1173,10 +1234,20 @@ function renderDetailMiniMarkers(focusedCardId) {
 
     const marker = L.marker([lat, lon], markerOptions);
 
+    // Build popup HTML with clickable address link
+    let addressHtml = '';
+    if (c.address) {
+      addressHtml = `
+        <span class="popup-address-link" onclick="openMapsChoiceModal(${lat}, ${lon}, event)">
+          📍 ${escapeHtml(c.address)} <i class="fas fa-external-link-alt"></i>
+        </span><br>
+      `;
+    }
+
     const popupHtml = `
       <strong>${escapeHtml(c.title)}</strong><br>
       ${c.description ? escapeHtml(c.description) + '<br>' : ''}
-      ${c.address ? '📍 ' + escapeHtml(c.address) + '<br>' : ''}
+      ${addressHtml}
       ${c.dueDate ? '📅 ' + escapeHtml(c.dueDate) : ''}
     `;
 
@@ -2326,6 +2397,59 @@ function deleteLabel(labelId) {
     renderDetailLabelSelector();
   }
 }
+
+// -------------------------
+// Maps Choice Modal
+// -------------------------
+let mapsChoiceCoordinates = null;
+
+function openMapsChoiceModal(lat, lon, event) {
+  // Prevent event propagation to avoid triggering other click handlers
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  // Store coordinates for use when user chooses an app
+  mapsChoiceCoordinates = { lat, lon };
+
+  document.getElementById('mapsChoiceModal').classList.add('show');
+}
+
+function closeMapsChoiceModal() {
+  document.getElementById('mapsChoiceModal').classList.remove('show');
+  mapsChoiceCoordinates = null;
+}
+
+function openInGoogleMaps() {
+  if (!mapsChoiceCoordinates) return;
+
+  const { lat, lon } = mapsChoiceCoordinates;
+  // Google Maps URL - works on mobile (opens app if installed) and desktop (opens website)
+  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+
+  window.open(url, '_blank');
+  closeMapsChoiceModal();
+}
+
+function openInAppleMaps() {
+  if (!mapsChoiceCoordinates) return;
+
+  const { lat, lon } = mapsChoiceCoordinates;
+  // Apple Maps URL - opens Apple Maps app on iOS, or maps.apple.com on other devices
+  const url = `https://maps.apple.com/?q=${lat},${lon}`;
+
+  window.open(url, '_blank');
+  closeMapsChoiceModal();
+}
+
+// Handle click outside maps choice modal
+window.addEventListener('mouseup', (event) => {
+  const mapsChoiceModal = document.getElementById('mapsChoiceModal');
+  if (event.target === mapsChoiceModal) {
+    closeMapsChoiceModal();
+  }
+});
 
 // -------------------------
 // Boot

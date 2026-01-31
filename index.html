@@ -386,6 +386,26 @@
     </div>
   </div>
 
+  <!-- Maps Choice Modal -->
+  <div class="modal" id="mapsChoiceModal">
+    <div class="modal-content maps-choice-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-map-marker-alt"></i> Ouvrir dans...</h2>
+        <button class="close-modal" onclick="closeMapsChoiceModal()">&times;</button>
+      </div>
+      <div class="maps-choice-buttons">
+        <button class="maps-choice-btn google-maps" onclick="openInGoogleMaps()">
+          <i class="fab fa-google"></i>
+          <span>Google Maps</span>
+        </button>
+        <button class="maps-choice-btn apple-maps" onclick="openInAppleMaps()">
+          <i class="fab fa-apple"></i>
+          <span>Apple Plans</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- External JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
