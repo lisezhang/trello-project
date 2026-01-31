@@ -124,16 +124,16 @@ trello-project/
 - **Persistance** : stockage dans `trelloCustomLabels` dans localStorage
 
 ### 14. Layout Mobile (Navbar et Listes)
-- **Navbar compacte** : sur mobile, la navbar utilise `flex-wrap: nowrap` pour garder une hauteur fixe et prévisible
+- **Scroll bloqué au niveau body** : sur mobile, `html` et `body` sont en `position: fixed` avec `overflow: hidden` pour empêcher tout scroll global
+- **Scroll uniquement dans les listes** : seul le `.cards-container` a `overflow-y: auto`, le board lui-même ne scrolle pas verticalement
+- **Navbar compacte à hauteur fixe** : la navbar utilise `height` (pas seulement `min-height`) pour garantir une hauteur stricte
 - **Hauteurs explicites par breakpoint** :
-  - ≤768px (tablettes) : navbar `min-height: 50px`, container `height: calc(100vh - 50px)`
-  - ≤480px (mobiles) : navbar `min-height: 46px`, container `height: calc(100vh - 46px)`
-- **Boutons compacts** : les boutons Board/Map sont réduits (`padding: 5px 10px`, `font-size: 11px`) pour tenir sur une ligne
-- **Espacement board-content** : `padding-top: 20px` (768px) / `15px` (480px) pour séparer visuellement les listes de la navbar
-- **Listes adaptatives** :
-  - ≤768px : `min-width/max-width: 260px`, `max-height: calc(100vh - 90px)`
-  - ≤480px : `min-width/max-width: 240px`, `max-height: calc(100vh - 76px)`
-- **Pas de chevauchement** : le calcul précis des hauteurs évite toute superposition entre la navbar et les listes
+  - ≤768px (tablettes) : navbar `height: 50px`, container `height: calc(100dvh - 50px)`, listes `height: calc(100dvh - 80px)`
+  - ≤480px (mobiles) : navbar `height: 46px`, container `height: calc(100dvh - 46px)`, listes `height: calc(100dvh - 66px)`
+- **Support iOS Safari** : utilisation de `100dvh` (dynamic viewport height) avec fallback sur `100vh` pour gérer la barre d'adresse dynamique
+- **Boutons compacts** : les boutons Board/Map sont réduits pour tenir sur une ligne
+- **Listes à hauteur fixe** : `height` au lieu de `max-height` + `min-height: 0` sur `.cards-container` pour le bon fonctionnement du flex overflow
+- **Pas de chevauchement** : le calcul précis des hauteurs et le blocage du scroll global évitent toute superposition
 
 ### 15. Upload d'Images Mobile (iOS Safari)
 - **Validation améliorée des types** : support des formats HEIC/HEIF (iOS), gestion des types MIME vides (fréquent sur iOS)

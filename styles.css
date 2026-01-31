@@ -1178,11 +1178,21 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+  /* Bloquer le scroll global sur mobile - seules les listes scrollent */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
   .navbar {
     flex-wrap: nowrap;
     gap: 10px;
     padding: 10px 15px;
+    height: 50px;
     min-height: 50px;
+    max-height: 50px;
   }
 
   .navbar-brand {
@@ -1211,17 +1221,36 @@ body {
   /* Adjust container to account for mobile navbar */
   .container {
     height: calc(100vh - 50px);
+    height: calc(100dvh - 50px); /* iOS Safari dynamic viewport */
+    overflow: hidden;
+  }
+
+  .board-section {
+    overflow: hidden;
   }
 
   .board-content {
     padding: 15px 10px;
-    padding-top: 20px;
+    padding-top: 15px;
+    overflow-x: auto;
+    overflow-y: hidden; /* Pas de scroll vertical du board - uniquement dans les listes */
+    height: 100%;
   }
 
   .list-container {
     min-width: 260px;
     max-width: 260px;
-    max-height: calc(100vh - 90px);
+    height: calc(100vh - 80px);
+    height: calc(100dvh - 80px); /* iOS Safari */
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cards-container {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Important pour que flex fonctionne avec overflow */
   }
 
   .modal-content {
@@ -1391,7 +1420,9 @@ body {
   .navbar {
     padding: 8px 10px;
     gap: 8px;
+    height: 46px;
     min-height: 46px;
+    max-height: 46px;
   }
 
   .navbar-brand {
@@ -1409,19 +1440,22 @@ body {
 
   .container {
     height: calc(100vh - 46px);
+    height: calc(100dvh - 46px); /* iOS Safari */
   }
 
   .board-content {
     padding: 10px 8px;
-    padding-top: 15px;
-    gap: 15px;
+    padding-top: 10px;
+    gap: 12px;
   }
 
   .list-container {
     min-width: 240px;
     max-width: 240px;
-    max-height: calc(100vh - 76px);
-    padding: 12px;
+    height: calc(100vh - 66px);
+    height: calc(100dvh - 66px); /* iOS Safari */
+    max-height: none;
+    padding: 10px;
   }
 
   .modal.show {
