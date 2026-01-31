@@ -69,8 +69,17 @@ trello-project/
 - **Affichage conditionnel** : la mini-carte n'apparaît que si la carte possède des coordonnées valides
 - Affiche tous les points avec coordonnées
 - Marqueur spécial (plus gros) pour la carte courante
-- Popup complet sur chaque marqueur
+- Popup complet sur chaque marqueur avec **adresse cliquable**
 - Recentrage de la mini-carte uniquement au clic
+
+### 6b. Adresses cliquables (Navigation externe)
+- **Dans le modal de détail** : bouton "Ouvrir" à côté de l'adresse (visible si coordonnées disponibles)
+- **Dans les popups des marqueurs** : lien cliquable sur l'adresse (grande carte et mini-carte)
+- **Menu de choix** : modal permettant de choisir entre Google Maps ou Apple Plans
+- **Ouverture native** : sur mobile, ouvre directement l'application Maps si installée
+- **URLs utilisées** :
+  - Google Maps : `https://www.google.com/maps/search/?api=1&query=LAT,LON`
+  - Apple Plans : `https://maps.apple.com/?q=LAT,LON`
 
 ### 7. Grande Carte (Vue Map)
 - Marqueurs préchargés au démarrage
@@ -166,6 +175,7 @@ let detailMiniMap = null;    // Instance Leaflet (mini-carte détail)
 let addCardMiniMap = null;   // Instance Leaflet (mini-carte ajout)
 let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 let isImageUploading = false; // État de chargement d'image (bloque la soumission)
+let mapsChoiceCoordinates = null; // Coordonnées pour le modal de choix Maps
 ```
 
 ### Fonctions Clés
@@ -199,6 +209,10 @@ let isImageUploading = false; // État de chargement d'image (bloque la soumissi
 | `openLabelsManagementModal()` | Ouvre le modal de gestion des étiquettes |
 | `saveLabel()` / `editLabel()` / `deleteLabel()` | CRUD des étiquettes personnalisées |
 | `getLabelById(id)` | Récupère une étiquette par son ID |
+| `openMapsChoiceModal(lat, lon, event)` | Ouvre le modal de choix Google Maps / Apple Plans |
+| `closeMapsChoiceModal()` | Ferme le modal de choix Maps |
+| `openInGoogleMaps()` | Ouvre les coordonnées dans Google Maps |
+| `openInAppleMaps()` | Ouvre les coordonnées dans Apple Plans |
 
 ### Constantes de Configuration
 ```javascript
