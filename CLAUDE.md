@@ -134,6 +134,15 @@ trello-project/
   - ≤480px : `min-width/max-width: 240px`, `max-height: calc(100vh - 76px)`
 - **Pas de chevauchement** : le calcul précis des hauteurs évite toute superposition entre la navbar et les listes
 
+### 15. Upload d'Images Mobile (iOS Safari)
+- **Validation améliorée des types** : support des formats HEIC/HEIF (iOS), gestion des types MIME vides (fréquent sur iOS)
+- **Extensions supportées** : jpg, jpeg, png, gif, webp, bmp, heic, heif, tiff, tif
+- **Reset de l'input différé** : `input.value = ''` est appelé **après** la lecture complète du fichier (dans `reader.onload`) pour éviter l'invalidation de la référence fichier sur iOS Safari
+- **État de chargement** : variable `isImageUploading` bloque la soumission du formulaire pendant le chargement
+- **Indicateur visuel** : spinner et message "Chargement de l'image..." avec boutons désactivés
+- **Timeout de sécurité** : 30 secondes max pour la lecture d'un fichier, avec message d'erreur si dépassé
+- **Gestion complète des erreurs** : handlers `onerror` et `onabort` pour le FileReader
+
 ---
 
 ## Structure du Code JavaScript
@@ -148,6 +157,7 @@ let markersLayer = null;     // L.layerGroup pour la grande carte
 let detailMiniMap = null;    // Instance Leaflet (mini-carte détail)
 let addCardMiniMap = null;   // Instance Leaflet (mini-carte ajout)
 let addCardCoverImage = null; // Image temporaire pour nouvelle carte
+let isImageUploading = false; // État de chargement d'image (bloque la soumission)
 ```
 
 ### Fonctions Clés
@@ -171,7 +181,8 @@ let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 | `selectCoverImage(url, credit)` | Sélectionne une image (modal détail) |
 | `selectAddCardCoverImage(url, credit)` | Sélectionne une image (modal ajout) |
 | `removeCoverImage()` | Supprime l'image de couverture |
-| `handleImageUpload(input, mode)` | Gère l'upload de fichier image |
+| `handleImageUpload(input, mode)` | Gère l'upload de fichier image (avec support iOS) |
+| `showImageUploadLoading(mode, show)` | Affiche/masque l'indicateur de chargement d'image |
 | `applyImageUrl(mode)` | Applique une image depuis URL |
 | `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
 | `renderAddCardLabelSelector()` | Affiche le sélecteur d'étiquettes (modal ajout) |
@@ -303,3 +314,5 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
   - `--keyboard-height` : hauteur du clavier (pour calculer le `margin-bottom` du modal)
 - Sur mobile, les modals utilisent `.keyboard-open` quand le clavier est détecté (hauteur réduite > 150px)
 - Le modal mobile utilise `position: fixed` avec `inset: 0` pour couvrir tout l'écran et masquer le board
+- **Upload d'images iOS** : ne jamais réinitialiser `input.value` avant la fin de `FileReader.readAsDataURL()` car iOS Safari peut invalider la référence au fichier
+- L'état `isImageUploading` doit être vérifié avant toute soumission de formulaire impliquant une image
