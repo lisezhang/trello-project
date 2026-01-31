@@ -66,6 +66,7 @@ trello-project/
 - Disponible dans le modal d'ajout ET le modal de détail
 
 ### 6. Mini-carte (Modal Détail)
+- **Affichage conditionnel** : la mini-carte n'apparaît que si la carte possède des coordonnées valides
 - Affiche tous les points avec coordonnées
 - Marqueur spécial (plus gros) pour la carte courante
 - Popup complet sur chaque marqueur
@@ -305,6 +306,7 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 - Les coordonnées utilisent `{ lat, lon }` (attention : lon, pas lng)
 
 ### Points d'Attention
+- La mini-carte du modal de détail vérifie `card.coordinates` avant de s'afficher (masquée si pas de coordonnées)
 - La mini-carte nécessite `invalidateSize()` car elle est dans un conteneur caché au départ
 - Le fitBounds se déclenche uniquement quand on passe de 0 à >0 marqueurs, ou explicitement
 - L'auto-complétion a un debounce de 500ms pour limiter les appels API
