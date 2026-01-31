@@ -474,6 +474,12 @@ function renderAddCardChecklist() {
 }
 
 function saveNewCard() {
+  // Prevent saving while image is still uploading
+  if (isImageUploading) {
+    alert('Veuillez attendre la fin du chargement de l\'image.');
+    return;
+  }
+
   const title = document.getElementById('cardTitleInput').value.trim();
   if (!title) return alert('Veuillez entrer un titre');
 
@@ -1528,27 +1534,62 @@ function applyImageUrl(mode) {
   }
 }
 
+// Track image upload loading state
+let isImageUploading = false;
+
 // Handle image file upload
 function handleImageUpload(input, mode) {
   const file = input.files[0];
   if (!file) return;
 
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
+  // Validate file type - improved for mobile/HEIC support
+  // On iOS, file.type can be empty, 'image/heic', 'image/heif', or standard types
+  const validImageTypes = ['image/', 'application/octet-stream']; // octet-stream for some iOS cases
+  const fileExtension = file.name ? file.name.split('.').pop().toLowerCase() : '';
+  const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tiff', 'tif'];
+
+  const isValidType = !file.type || // Empty type (common on iOS)
+                      validImageTypes.some(type => file.type.startsWith(type)) ||
+                      file.type.includes('heic') ||
+                      file.type.includes('heif');
+  const isValidExtension = validExtensions.includes(fileExtension);
+
+  if (!isValidType && !isValidExtension) {
     alert('Veuillez sélectionner un fichier image valide');
+    input.value = '';
     return;
   }
 
   // Validate file size (max 5MB for localStorage)
+  // Note: Base64 encoding adds ~33%, so effective limit is ~3.75MB original
   const maxSize = 5 * 1024 * 1024; // 5MB
   if (file.size > maxSize) {
     alert('L\'image est trop grande. Taille maximum : 5 Mo');
+    input.value = '';
     return;
   }
 
+  // Show loading state
+  isImageUploading = true;
+  showImageUploadLoading(mode, true);
+
   const reader = new FileReader();
 
+  // Timeout for stuck reads (common on mobile)
+  const readTimeout = setTimeout(() => {
+    if (isImageUploading) {
+      isImageUploading = false;
+      showImageUploadLoading(mode, false);
+      alert('Le chargement de l\'image a pris trop de temps. Veuillez réessayer.');
+      input.value = '';
+    }
+  }, 30000); // 30 second timeout
+
   reader.onload = function(e) {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showImageUploadLoading(mode, false);
+
     const base64Data = e.target.result;
 
     if (mode === 'detail') {
@@ -1556,16 +1597,69 @@ function handleImageUpload(input, mode) {
     } else {
       selectAddCardCoverImage(base64Data, 'Image importée');
     }
+
+    // Reset input AFTER successful read to allow selecting the same file again
+    // This is critical for iOS Safari - resetting before read can invalidate file reference
+    input.value = '';
   };
 
-  reader.onerror = function() {
-    alert('Erreur lors de la lecture du fichier');
+  reader.onerror = function(e) {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showImageUploadLoading(mode, false);
+    console.error('FileReader error:', e);
+    alert('Erreur lors de la lecture du fichier. Veuillez réessayer.');
+    input.value = '';
+  };
+
+  reader.onabort = function() {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showImageUploadLoading(mode, false);
+    input.value = '';
   };
 
   reader.readAsDataURL(file);
+}
 
-  // Reset input to allow selecting the same file again
-  input.value = '';
+// Show/hide loading indicator for image upload
+function showImageUploadLoading(mode, show) {
+  const buttonSelector = mode === 'detail'
+    ? 'button[onclick*="detailImageFileInput"]'
+    : 'button[onclick*="addCardImageFileInput"]';
+
+  // Find the upload button's parent container
+  const container = mode === 'detail'
+    ? document.querySelector('#cardDetailModal .image-alt-buttons')
+    : document.querySelector('#addCardModal .image-alt-buttons');
+
+  if (!container) return;
+
+  // Remove existing loading indicator
+  const existingLoading = container.querySelector('.image-upload-loading');
+  if (existingLoading) {
+    existingLoading.remove();
+  }
+
+  if (show) {
+    // Add loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'image-upload-loading';
+    loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement de l\'image...';
+    container.appendChild(loadingDiv);
+
+    // Disable buttons
+    container.querySelectorAll('button').forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    });
+  } else {
+    // Re-enable buttons
+    container.querySelectorAll('button').forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
+  }
 }
 
 // Add Enter key support for image search and URL input
