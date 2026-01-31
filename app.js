@@ -1727,9 +1727,8 @@ function initMobileKeyboardHandler() {
   const modals = document.querySelectorAll('.modal');
   let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   let keyboardOpen = false;
-  let scrollTimeoutId = null;
   let lastFocusedElement = null;
-  let hasScrolledForCurrentFocus = false;
+  let isScrollingProgrammatically = false;
 
   // Set initial CSS custom property for viewport height
   updateViewportHeight();
@@ -1745,11 +1744,15 @@ function initMobileKeyboardHandler() {
 
   function updateViewportHeight() {
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty('--visual-viewport-height', `${vh}px`);
+    const offsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
 
-    // Also update the keyboard height for margin calculation
-    const keyboardHeight = initialViewportHeight - vh;
-    document.documentElement.style.setProperty('--keyboard-height', `${Math.max(0, keyboardHeight)}px`);
+    document.documentElement.style.setProperty('--visual-viewport-height', `${vh}px`);
+    document.documentElement.style.setProperty('--visual-viewport-offset', `${offsetTop}px`);
+
+    // Calculate keyboard height more accurately
+    // On iOS, we need to account for the offset as well
+    const keyboardHeight = Math.max(0, initialViewportHeight - vh - offsetTop);
+    document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
   }
 
   function handleViewportResize() {
@@ -1793,61 +1796,77 @@ function initMobileKeyboardHandler() {
         modal.classList.add('keyboard-open');
         // Force body to not scroll
         document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
       } else {
         modal.classList.remove('keyboard-open');
         // Restore body scroll only if no modal is open
         const anyModalOpen = document.querySelector('.modal.show');
         if (!anyModalOpen) {
           document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
         }
       }
     });
 
-    // When keyboard opens, scroll to focused element once (if not already done)
-    if (isOpen && lastFocusedElement && !hasScrolledForCurrentFocus) {
-      scrollToElementOnce(lastFocusedElement);
+    // When keyboard opens, ensure focused element is visible (gentle scroll)
+    if (isOpen && lastFocusedElement) {
+      ensureElementVisible(lastFocusedElement);
     }
   }
 
-  function scrollToElementOnce(element) {
-    // Clear any pending scroll
-    if (scrollTimeoutId) {
-      clearTimeout(scrollTimeoutId);
-    }
-
+  function ensureElementVisible(element) {
     // Find the open modal
     const openModal = document.querySelector('.modal.show');
     if (!openModal) return;
 
-    // Single scroll to position the element, then user has free scroll
-    scrollTimeoutId = setTimeout(() => {
-      // Get element position relative to the modal
+    // Delay to allow keyboard animation to complete
+    setTimeout(() => {
+      if (isScrollingProgrammatically) return;
+
+      const elementRect = element.getBoundingClientRect();
+      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+      // Check if element is already visible in the viewport
+      // We want the element to be in the middle third of the visible area
+      const visibleTop = viewportHeight * 0.2;
+      const visibleBottom = viewportHeight * 0.7;
+
+      if (elementRect.top >= visibleTop && elementRect.bottom <= visibleBottom) {
+        // Element is already well-positioned, no scroll needed
+        return;
+      }
+
+      // Calculate minimal scroll to make element visible
+      // Prefer scrolling just enough to show the element, not centering aggressively
       const modalContent = openModal.querySelector('.modal-content');
       if (!modalContent) return;
 
-      // Calculate element position within the modal
-      const elementRect = element.getBoundingClientRect();
-      const currentScrollTop = openModal.scrollTop;
+      let scrollAdjustment = 0;
 
-      // Get visible height (accounting for keyboard)
-      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      if (elementRect.top < visibleTop) {
+        // Element is above visible area - scroll up (reduce scrollTop)
+        scrollAdjustment = elementRect.top - visibleTop;
+      } else if (elementRect.bottom > visibleBottom) {
+        // Element is below visible area - scroll down (increase scrollTop)
+        scrollAdjustment = elementRect.bottom - visibleBottom;
+      }
 
-      // Calculate where we need to scroll to show the element
-      // Position element at roughly 1/3 from top of visible area
-      const elementTopAbsolute = elementRect.top + currentScrollTop;
-      const targetScrollTop = elementTopAbsolute - (viewportHeight / 3);
+      if (Math.abs(scrollAdjustment) > 20) {
+        isScrollingProgrammatically = true;
+        openModal.scrollBy({
+          top: scrollAdjustment,
+          behavior: 'smooth'
+        });
 
-      openModal.scrollTo({
-        top: Math.max(0, targetScrollTop),
-        behavior: 'smooth'
-      });
-
-      hasScrolledForCurrentFocus = true;
-      scrollTimeoutId = null;
-    }, 150);
+        // Reset flag after scroll animation
+        setTimeout(() => {
+          isScrollingProgrammatically = false;
+        }, 400);
+      }
+    }, 300);
   }
 
-  // Handle focus events on inputs - scroll once when focused
+  // Handle focus events on inputs
   document.addEventListener('focusin', (e) => {
     const target = e.target;
     const isInput = target.tagName === 'INPUT' ||
@@ -1859,21 +1878,16 @@ function initMobileKeyboardHandler() {
     const openModal = document.querySelector('.modal.show');
     if (!openModal) return;
 
-    // Track new focus
-    if (lastFocusedElement !== target) {
-      lastFocusedElement = target;
-      hasScrolledForCurrentFocus = false;
-    }
+    lastFocusedElement = target;
 
-    // Delay to allow keyboard to open, then scroll once
-    setTimeout(() => {
-      if (!hasScrolledForCurrentFocus) {
-        scrollToElementOnce(target);
-      }
-    }, 350);
+    // Only scroll if keyboard is already open
+    // This prevents jumping when first focusing
+    if (keyboardOpen) {
+      ensureElementVisible(target);
+    }
   });
 
-  // Handle blur to reset scroll tracking
+  // Handle blur to reset tracking
   document.addEventListener('focusout', (e) => {
     // Small delay to check if focus moved to another input
     setTimeout(() => {
@@ -1884,13 +1898,7 @@ function initMobileKeyboardHandler() {
          activeElement.tagName === 'SELECT');
 
       if (!isStillInInput) {
-        // Clear scroll timeout if user leaves all inputs
-        if (scrollTimeoutId) {
-          clearTimeout(scrollTimeoutId);
-          scrollTimeoutId = null;
-        }
         lastFocusedElement = null;
-        hasScrolledForCurrentFocus = false;
       }
     }, 100);
   });
@@ -1914,6 +1922,29 @@ function initMobileKeyboardHandler() {
         updateViewportHeight();
       }, 300);
     }
+  });
+
+  // Recalculate initial height when modal opens
+  // This helps when the page was loaded with address bar visible
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const target = mutation.target;
+        if (target.classList.contains('modal') && target.classList.contains('show')) {
+          // Modal just opened - recalculate initial height if keyboard is closed
+          if (!keyboardOpen) {
+            setTimeout(() => {
+              initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+              updateViewportHeight();
+            }, 100);
+          }
+        }
+      }
+    });
+  });
+
+  modals.forEach(modal => {
+    observer.observe(modal, { attributes: true });
   });
 }
 

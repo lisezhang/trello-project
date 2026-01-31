@@ -1281,6 +1281,9 @@ body {
     inset: 0;
     width: 100%;
     height: 100%;
+    /* Use dynamic viewport height for iOS Safari */
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 
   .modal-content {
@@ -1289,12 +1292,16 @@ body {
     width: calc(100% - 20px);
     max-width: calc(100% - 20px);
     padding: 15px;
-    /* Add bottom padding to ensure last elements are scrollable above keyboard */
-    padding-bottom: 30px;
+    /* Add bottom padding to ensure last elements are scrollable */
+    padding-bottom: 40px;
+    /* Extra margin at bottom for scroll space */
+    margin-bottom: 20px;
     /* Ensure solid background to prevent board from showing through */
     background: #fff;
     position: relative;
     z-index: 1;
+    /* Prevent content from shrinking */
+    flex-shrink: 0;
   }
 
   /* Cover image adjustments for mobile modal padding */
@@ -1307,30 +1314,37 @@ body {
     height: 140px;
   }
 
-  /* When keyboard is open - ensure proper display */
+  /* When keyboard is open - ensure proper display and scrolling */
   .modal.keyboard-open {
-    /* Keep full screen coverage but use visual viewport for scrolling */
+    /* Keep full screen coverage */
     position: fixed;
     inset: 0;
     width: 100%;
-    height: 100%;
+    /* Use visual viewport height when keyboard is open */
+    height: var(--visual-viewport-height, 100vh);
     /* Darker overlay to better hide the background */
-    background: rgba(0, 0, 0, 0.7);
-    /* Ensure we can still scroll */
+    background: rgba(0, 0, 0, 0.75);
+    /* Ensure we can still scroll within the visible area */
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    /* Align content to top */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .modal.keyboard-open .modal-content {
     /* Position modal at top with proper spacing */
     margin-top: 10px;
-    /* Add extra bottom margin so content can scroll above keyboard */
-    margin-bottom: calc(var(--keyboard-height, 0px) + 50px);
-    /* Ensure enough bottom padding for the last elements */
-    padding-bottom: 40px;
-    /* Prevent content from being too tall */
+    /* Add extra bottom padding so user can scroll to see all content above keyboard */
+    padding-bottom: 60px;
+    /* Large bottom margin ensures content can be scrolled fully into view */
+    margin-bottom: calc(var(--keyboard-height, 0px) + 80px);
+    /* No max-height constraint - let the modal grow */
     max-height: none;
+    /* Ensure content doesn't shrink */
+    flex-shrink: 0;
   }
 
   /* Ensure the modal scrolls properly */
@@ -1345,6 +1359,18 @@ body {
   .modal.show::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 2px;
+  }
+
+  /* Ensure touch scrolling works well */
+  .modal.show {
+    scroll-behavior: smooth;
+  }
+
+  /* Prevent body scroll when modal with keyboard is open */
+  body.modal-keyboard-open {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
   }
 
   /* Image search grid on mobile */
@@ -1465,16 +1491,20 @@ body {
     inset: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 
   .modal-content {
     width: calc(100% - 10px);
     max-width: calc(100% - 10px);
     padding: 12px;
-    padding-bottom: 30px;
+    padding-bottom: 50px;
     margin: 5px auto;
+    margin-bottom: 20px;
     /* Solid background */
     background: #fff;
+    flex-shrink: 0;
   }
 
   .cover-image-container {
@@ -1499,10 +1529,15 @@ body {
   /* Keyboard open on small devices */
   .modal.keyboard-open {
     background: rgba(0, 0, 0, 0.8);
+    height: var(--visual-viewport-height, 100vh);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .modal.keyboard-open .modal-content {
-    padding-bottom: 40px;
-    margin-bottom: calc(var(--keyboard-height, 0px) + 40px);
+    padding-bottom: 70px;
+    margin-bottom: calc(var(--keyboard-height, 0px) + 100px);
+    flex-shrink: 0;
   }
 }
