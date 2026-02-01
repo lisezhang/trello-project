@@ -5,11 +5,50 @@
   box-sizing: border-box;
 }
 
+/* Color normalization for Safari mobile (Display P3 vs sRGB) */
+:root {
+  color-scheme: light;
+  /* Force consistent color rendering across browsers */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safari-specific color interpolation fix */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific styles */
+  :root {
+    /* Force sRGB color space interpretation */
+    color: #000;
+    background-color: #fff;
+  }
+
+  body {
+    /* Ensure gradient uses consistent color space */
+    -webkit-backdrop-filter: none;
+  }
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
   min-height: 100vh;
   overflow-x: auto;
+  position: relative;
+}
+
+/* Gradient background isolated in pseudo-element for Safari compatibility */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: -1;
+  /* Force GPU rendering for consistent colors */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Navbar */

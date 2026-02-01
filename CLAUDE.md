@@ -72,6 +72,11 @@ trello-project/
 - Gestion du clavier virtuel
 - Layout responsive
 
+### Compatibilité Safari
+- Normalisation des couleurs (Display P3 vs sRGB)
+- Gradient de fond isolé via pseudo-élément `body::before` pour éviter les problèmes de rendu en mode responsive
+- Meta tag `color-scheme: light` pour cohérence des couleurs
+
 ---
 
 ## Structure de Données
@@ -143,6 +148,7 @@ Pour les détails d'implémentation (modules, exports, dépendances, patterns, p
 - [ ] Système d'undo/redo
 
 ### Technique
+- [x] Compatibilité couleurs Safari mobile (pseudo-élément `::before`)
 - [ ] Gestion erreurs API Nominatim
 - [ ] Clustering des marqueurs
 - [ ] Compression images Base64
