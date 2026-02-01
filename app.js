@@ -1921,6 +1921,15 @@ function initMobileKeyboardHandler() {
   }
 
   function handleKeyboardChange(isOpen) {
+    // When keyboard closes, preserve scroll position of the open modal
+    const openModal = document.querySelector('.modal.show');
+    let savedScrollTop = null;
+
+    if (!isOpen && openModal) {
+      // Save current scroll position before any CSS changes
+      savedScrollTop = openModal.scrollTop;
+    }
+
     modals.forEach(modal => {
       if (isOpen) {
         modal.classList.add('keyboard-open');
@@ -1937,6 +1946,24 @@ function initMobileKeyboardHandler() {
         }
       }
     });
+
+    // When keyboard closes, restore scroll position after layout recalculation
+    if (!isOpen && openModal && savedScrollTop !== null) {
+      // Use requestAnimationFrame to wait for CSS changes to apply
+      requestAnimationFrame(() => {
+        // Double RAF to ensure layout is complete
+        requestAnimationFrame(() => {
+          // Temporarily disable smooth scrolling to restore position instantly
+          const originalScrollBehavior = openModal.style.scrollBehavior;
+          openModal.style.scrollBehavior = 'auto';
+          openModal.scrollTop = savedScrollTop;
+          // Restore original scroll behavior after a brief delay
+          setTimeout(() => {
+            openModal.style.scrollBehavior = originalScrollBehavior;
+          }, 50);
+        });
+      });
+    }
 
     // When keyboard opens, ensure focused element is visible (gentle scroll)
     if (isOpen && lastFocusedElement) {
