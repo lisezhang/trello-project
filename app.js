@@ -394,10 +394,6 @@ function openAddCardModal() {
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardChecklistContainer').innerHTML = '';
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
-  document.getElementById('addCardImageSearchInput').value = '';
-  document.getElementById('addCardImageSearchResults').style.display = 'none';
-  document.getElementById('addCardUrlInputContainer').style.display = 'none';
-  document.getElementById('addCardImageUrlInput').value = '';
   window.currentAddressCoordinates = null;
 
   const modal = document.getElementById('addCardModal');
@@ -419,7 +415,6 @@ function closeAddCardModal() {
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
-  document.getElementById('addCardImageSearchResults').style.display = 'none';
   addCardChecklist = [];
   addCardCoverImage = null;
 }
@@ -585,21 +580,12 @@ function openCardDetailModal(card) {
   // Cover image
   const coverContainer = document.getElementById('detailCoverImageContainer');
   const coverImg = document.getElementById('detailCoverImage');
-  const removeCoverOption = document.getElementById('removeCoverImageOption');
   if (card.coverImage) {
     coverContainer.style.display = 'block';
     coverImg.src = card.coverImage;
-    if (removeCoverOption) removeCoverOption.style.display = 'block';
   } else {
     coverContainer.style.display = 'none';
-    if (removeCoverOption) removeCoverOption.style.display = 'none';
   }
-
-  // Reset image search
-  document.getElementById('imageSearchInput').value = '';
-  document.getElementById('imageSearchResults').style.display = 'none';
-  document.getElementById('detailUrlInputContainer').style.display = 'none';
-  document.getElementById('detailImageUrlInput').value = '';
 
   // Reset labels input panel
   document.getElementById('detailLabelsInput').style.display = 'none';
@@ -1575,14 +1561,6 @@ function selectCoverImage(imageUrl, photographer) {
   container.style.display = 'block';
   img.src = imageUrl;
 
-  // Show the remove option in menu
-  const removeCoverOption = document.getElementById('removeCoverImageOption');
-  if (removeCoverOption) removeCoverOption.style.display = 'block';
-
-  // Hide search results
-  document.getElementById('imageSearchResults').style.display = 'none';
-  document.getElementById('imageSearchInput').value = '';
-
   renderHistory(card);
 }
 
@@ -1596,10 +1574,6 @@ function selectAddCardCoverImage(imageUrl, photographer) {
 
   container.style.display = 'block';
   img.src = imageUrl;
-
-  // Hide search results
-  document.getElementById('addCardImageSearchResults').style.display = 'none';
-  document.getElementById('addCardImageSearchInput').value = '';
 }
 
 // Remove cover image from existing card (detail modal)
@@ -1619,10 +1593,6 @@ function removeCoverImage() {
 
   // Update modal display
   document.getElementById('detailCoverImageContainer').style.display = 'none';
-
-  // Hide the remove option in menu
-  const removeCoverOption = document.getElementById('removeCoverImageOption');
-  if (removeCoverOption) removeCoverOption.style.display = 'none';
 
   renderHistory(card);
 }
