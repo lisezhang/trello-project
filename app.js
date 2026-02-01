@@ -560,7 +560,7 @@ function openCardDetailModal(card) {
       detailAddressEl.innerHTML = `
         <div class="address-display-container">
           <span class="address-text">${escapeHtml(card.address)}</span>
-          <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+          <button type="button" class="address-open-btn" onclick='openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, ${JSON.stringify(card.address)}, event)'>
             <i class="fas fa-external-link-alt"></i> Ouvrir
           </button>
         </div>
@@ -732,7 +732,7 @@ function saveCardField(event, field) {
         valueDiv.innerHTML = `
           <div class="address-display-container">
             <span class="address-text">${escapeHtml(card.address)}</span>
-            <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+            <button type="button" class="address-open-btn" onclick='openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, ${JSON.stringify(card.address)}, event)'>
               <i class="fas fa-external-link-alt"></i> Ouvrir
             </button>
           </div>
@@ -993,7 +993,7 @@ async function performDetailAddressSearch(query) {
         valueDiv.innerHTML = `
           <div class="address-display-container">
             <span class="address-text">${escapeHtml(card.address)}</span>
-            <button type="button" class="address-open-btn" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+            <button type="button" class="address-open-btn" onclick='openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, ${JSON.stringify(card.address)}, event)'>
               <i class="fas fa-external-link-alt"></i> Ouvrir
             </button>
           </div>
@@ -1118,7 +1118,7 @@ function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
     let addressHtml = '';
     if (card.address) {
       addressHtml = `
-        <span class="popup-address-link" onclick="openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, event)">
+        <span class="popup-address-link" onclick='openMapsChoiceModal(${card.coordinates.lat}, ${card.coordinates.lon}, ${JSON.stringify(card.address)}, event)'>
           📍 ${escapeHtml(card.address)} <i class="fas fa-external-link-alt"></i>
         </span><br>
       `;
@@ -1238,7 +1238,7 @@ function renderDetailMiniMarkers(focusedCardId) {
     let addressHtml = '';
     if (c.address) {
       addressHtml = `
-        <span class="popup-address-link" onclick="openMapsChoiceModal(${lat}, ${lon}, event)">
+        <span class="popup-address-link" onclick='openMapsChoiceModal(${lat}, ${lon}, ${JSON.stringify(c.address)}, event)'>
           📍 ${escapeHtml(c.address)} <i class="fas fa-external-link-alt"></i>
         </span><br>
       `;
@@ -2401,43 +2401,46 @@ function deleteLabel(labelId) {
 // -------------------------
 // Maps Choice Modal
 // -------------------------
-let mapsChoiceCoordinates = null;
+let mapsChoiceData = null;
 
-function openMapsChoiceModal(lat, lon, event) {
+function openMapsChoiceModal(lat, lon, address, event) {
   // Prevent event propagation to avoid triggering other click handlers
   if (event) {
     event.stopPropagation();
     event.preventDefault();
   }
 
-  // Store coordinates for use when user chooses an app
-  mapsChoiceCoordinates = { lat, lon };
+  // Store coordinates and address for use when user chooses an app
+  mapsChoiceData = { lat, lon, address };
 
   document.getElementById('mapsChoiceModal').classList.add('show');
 }
 
 function closeMapsChoiceModal() {
   document.getElementById('mapsChoiceModal').classList.remove('show');
-  mapsChoiceCoordinates = null;
+  mapsChoiceData = null;
 }
 
 function openInGoogleMaps() {
-  if (!mapsChoiceCoordinates) return;
+  if (!mapsChoiceData) return;
 
-  const { lat, lon } = mapsChoiceCoordinates;
-  // Google Maps URL - works on mobile (opens app if installed) and desktop (opens website)
-  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+  const { lat, lon, address } = mapsChoiceData;
+  // Google Maps URL - use address for display, fallback to coordinates
+  const query = address ? encodeURIComponent(address) : `${lat},${lon}`;
+  const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
 
   window.open(url, '_blank');
   closeMapsChoiceModal();
 }
 
 function openInAppleMaps() {
-  if (!mapsChoiceCoordinates) return;
+  if (!mapsChoiceData) return;
 
-  const { lat, lon } = mapsChoiceCoordinates;
-  // Apple Maps URL - opens Apple Maps app on iOS, or maps.apple.com on other devices
-  const url = `https://maps.apple.com/?q=${lat},${lon}`;
+  const { lat, lon, address } = mapsChoiceData;
+  // Apple Maps URL - use address for display with coordinates for precise location
+  const url = address
+    ? `https://maps.apple.com/?q=${encodeURIComponent(address)}&ll=${lat},${lon}`
+    : `https://maps.apple.com/?q=${lat},${lon}`;
 
   window.open(url, '_blank');
   closeMapsChoiceModal();

@@ -77,9 +77,9 @@ trello-project/
 - **Dans les popups des marqueurs** : lien cliquable sur l'adresse (grande carte et mini-carte)
 - **Menu de choix** : modal permettant de choisir entre Google Maps ou Apple Plans
 - **Ouverture native** : sur mobile, ouvre directement l'application Maps si installée
-- **URLs utilisées** :
-  - Google Maps : `https://www.google.com/maps/search/?api=1&query=LAT,LON`
-  - Apple Plans : `https://maps.apple.com/?q=LAT,LON`
+- **URLs utilisées** (affichent le nom de l'adresse, pas les coordonnées) :
+  - Google Maps : `https://www.google.com/maps/search/?api=1&query=ADRESSE`
+  - Apple Plans : `https://maps.apple.com/?q=ADRESSE&ll=LAT,LON`
 
 ### 7. Grande Carte (Vue Map)
 - Marqueurs préchargés au démarrage
@@ -175,7 +175,7 @@ let detailMiniMap = null;    // Instance Leaflet (mini-carte détail)
 let addCardMiniMap = null;   // Instance Leaflet (mini-carte ajout)
 let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 let isImageUploading = false; // État de chargement d'image (bloque la soumission)
-let mapsChoiceCoordinates = null; // Coordonnées pour le modal de choix Maps
+let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, address)
 ```
 
 ### Fonctions Clés
@@ -209,10 +209,10 @@ let mapsChoiceCoordinates = null; // Coordonnées pour le modal de choix Maps
 | `openLabelsManagementModal()` | Ouvre le modal de gestion des étiquettes |
 | `saveLabel()` / `editLabel()` / `deleteLabel()` | CRUD des étiquettes personnalisées |
 | `getLabelById(id)` | Récupère une étiquette par son ID |
-| `openMapsChoiceModal(lat, lon, event)` | Ouvre le modal de choix Google Maps / Apple Plans |
+| `openMapsChoiceModal(lat, lon, address, event)` | Ouvre le modal de choix Google Maps / Apple Plans |
 | `closeMapsChoiceModal()` | Ferme le modal de choix Maps |
-| `openInGoogleMaps()` | Ouvre les coordonnées dans Google Maps |
-| `openInAppleMaps()` | Ouvre les coordonnées dans Apple Plans |
+| `openInGoogleMaps()` | Ouvre l'adresse dans Google Maps |
+| `openInAppleMaps()` | Ouvre l'adresse dans Apple Plans |
 
 ### Constantes de Configuration
 ```javascript
