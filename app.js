@@ -53,6 +53,47 @@ let lists = [];
 let cards = [];
 
 // -------------------------
+// Date/Time Helpers
+// -------------------------
+function toggleTimeInput(inputPrefix, show) {
+  const timeInput = document.getElementById(inputPrefix + 'Input');
+  if (timeInput) {
+    timeInput.style.display = show ? 'block' : 'none';
+    if (!show) {
+      timeInput.value = '';
+    }
+  }
+}
+
+function formatDateDisplay(date, time) {
+  if (!date) return null;
+
+  // Format date as dd/mm/yyyy
+  const [year, month, day] = date.split('-');
+  let display = `${day}/${month}/${year}`;
+
+  if (time) {
+    display += ` à ${time}`;
+  }
+
+  return display;
+}
+
+function formatDateRangeDisplay(startDate, startTime, endDate, endTime) {
+  const start = formatDateDisplay(startDate, startTime);
+  const end = formatDateDisplay(endDate, endTime);
+
+  if (start && end) {
+    return `${start} → ${end}`;
+  } else if (start) {
+    return `Début: ${start}`;
+  } else if (end) {
+    return `Fin: ${end}`;
+  }
+  return null;
+}
+
+// -------------------------
 // Init
 // -------------------------
 function init() {
@@ -238,10 +279,13 @@ function createCardElement(card) {
   const infoDiv = document.createElement('div');
   infoDiv.className = 'card-info';
 
-  if (card.dueDate) {
+  // Display date range (support both old dueDate and new startDate/endDate)
+  const dateDisplay = formatDateRangeDisplay(card.startDate, card.startTime, card.endDate, card.endTime)
+    || (card.dueDate ? formatDateDisplay(card.dueDate, null) : null);
+  if (dateDisplay) {
     const dateItem = document.createElement('div');
     dateItem.className = 'card-info-item';
-    dateItem.innerHTML = `<i class="fas fa-calendar"></i> ${card.dueDate}`;
+    dateItem.innerHTML = `<i class="fas fa-calendar"></i> ${dateDisplay}`;
     infoDiv.appendChild(dateItem);
   }
 
@@ -388,7 +432,16 @@ function openAddCardModal() {
   document.getElementById('cardTitleInput').value = '';
   document.getElementById('cardDescriptionInput').value = '';
   document.getElementById('cardAddressInput').value = '';
-  document.getElementById('cardDueDateInput').value = '';
+  // Reset start date/time fields
+  document.getElementById('cardStartDateInput').value = '';
+  document.getElementById('cardStartTimeInput').value = '';
+  document.getElementById('cardStartTimeInput').style.display = 'none';
+  document.getElementById('cardStartTimeToggle').checked = false;
+  // Reset end date/time fields
+  document.getElementById('cardEndDateInput').value = '';
+  document.getElementById('cardEndTimeInput').value = '';
+  document.getElementById('cardEndTimeInput').style.display = 'none';
+  document.getElementById('cardEndTimeToggle').checked = false;
   document.getElementById('addCardLabelSearch').value = '';
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
@@ -499,6 +552,17 @@ function saveNewCard() {
   const title = document.getElementById('cardTitleInput').value.trim();
   if (!title) return alert('Veuillez entrer un titre');
 
+  // Get start date/time
+  const startDate = document.getElementById('cardStartDateInput').value;
+  const startTime = document.getElementById('cardStartTimeToggle').checked
+    ? document.getElementById('cardStartTimeInput').value
+    : null;
+  // Get end date/time
+  const endDate = document.getElementById('cardEndDateInput').value;
+  const endTime = document.getElementById('cardEndTimeToggle').checked
+    ? document.getElementById('cardEndTimeInput').value
+    : null;
+
   const newCard = {
     id: Math.max(...cards.map(c => c.id), 0) + 1,
     listId: currentListId,
@@ -507,7 +571,10 @@ function saveNewCard() {
     labels: [...selectedLabels],
     address: document.getElementById('cardAddressInput').value.trim(),
     coordinates: window.currentAddressCoordinates || null,
-    dueDate: document.getElementById('cardDueDateInput').value,
+    startDate: startDate || null,
+    startTime: startTime,
+    endDate: endDate || null,
+    endTime: endTime,
     coverImage: addCardCoverImage ? addCardCoverImage.url : null,
     coverImageCredit: addCardCoverImage ? addCardCoverImage.credit : null,
     checklist: [...addCardChecklist],
@@ -549,9 +616,25 @@ function openCardDetailModal(card) {
   document.getElementById('detailDescription').className = card.description ? 'card-detail-value' : 'card-detail-value empty';
   document.getElementById('detailDescriptionInput').value = card.description || '';
 
-  document.getElementById('detailDate').textContent = card.dueDate || '(Pas de date)';
-  document.getElementById('detailDate').className = card.dueDate ? 'card-detail-value' : 'card-detail-value empty';
-  document.getElementById('detailDateInput').value = card.dueDate || '';
+  // Start Date display
+  const startDateDisplay = formatDateDisplay(card.startDate, card.startTime);
+  document.getElementById('detailStartDate').textContent = startDateDisplay || '(Pas de date)';
+  document.getElementById('detailStartDate').className = startDateDisplay ? 'card-detail-value' : 'card-detail-value empty';
+  document.getElementById('detailStartDateDateInput').value = card.startDate || '';
+  document.getElementById('detailStartTimeInput').value = card.startTime || '';
+  document.getElementById('detailStartTimeInput').style.display = card.startTime ? 'block' : 'none';
+  document.getElementById('detailStartTimeToggle').checked = !!card.startTime;
+  document.getElementById('detailStartDateInput').style.display = 'none';
+
+  // End Date display
+  const endDateDisplay = formatDateDisplay(card.endDate, card.endTime);
+  document.getElementById('detailEndDate').textContent = endDateDisplay || '(Pas de date)';
+  document.getElementById('detailEndDate').className = endDateDisplay ? 'card-detail-value' : 'card-detail-value empty';
+  document.getElementById('detailEndDateDateInput').value = card.endDate || '';
+  document.getElementById('detailEndTimeInput').value = card.endTime || '';
+  document.getElementById('detailEndTimeInput').style.display = card.endTime ? 'block' : 'none';
+  document.getElementById('detailEndTimeToggle').checked = !!card.endTime;
+  document.getElementById('detailEndDateInput').style.display = 'none';
 
   // Address display with optional "Open in Maps" button
   const detailAddressEl = document.getElementById('detailAddress');
@@ -691,6 +774,13 @@ function editCardField(field) {
     return;
   }
 
+  // Date fields: show date-time edit row
+  if (field === 'startDate' || field === 'endDate') {
+    valueDiv.style.display = 'none';
+    inputElement.style.display = 'flex';
+    return;
+  }
+
   valueDiv.style.display = 'none';
   inputElement.style.display = 'block';
   inputElement.focus();
@@ -716,10 +806,26 @@ function saveCardField(event, field) {
     card.description = inputElement.value.trim();
     valueDiv.textContent = card.description || '(Vide)';
     valueDiv.className = card.description ? 'card-detail-value' : 'card-detail-value empty';
-  } else if (field === 'dueDate') {
-    card.dueDate = inputElement.value;
-    valueDiv.textContent = card.dueDate || '(Pas de date)';
-    valueDiv.className = card.dueDate ? 'card-detail-value' : 'card-detail-value empty';
+  } else if (field === 'startDate') {
+    card.startDate = document.getElementById('detailStartDateDateInput').value || null;
+    card.startTime = document.getElementById('detailStartTimeToggle').checked
+      ? document.getElementById('detailStartTimeInput').value || null
+      : null;
+    const display = formatDateDisplay(card.startDate, card.startTime);
+    valueDiv.textContent = display || '(Pas de date)';
+    valueDiv.className = display ? 'card-detail-value' : 'card-detail-value empty';
+    inputElement.style.display = 'none';
+    valueDiv.style.display = 'flex';
+  } else if (field === 'endDate') {
+    card.endDate = document.getElementById('detailEndDateDateInput').value || null;
+    card.endTime = document.getElementById('detailEndTimeToggle').checked
+      ? document.getElementById('detailEndTimeInput').value || null
+      : null;
+    const display = formatDateDisplay(card.endDate, card.endTime);
+    valueDiv.textContent = display || '(Pas de date)';
+    valueDiv.className = display ? 'card-detail-value' : 'card-detail-value empty';
+    inputElement.style.display = 'none';
+    valueDiv.style.display = 'flex';
   } else if (field === 'address') {
     card.address = inputElement.value.trim();
 
@@ -1163,11 +1269,13 @@ function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
       `;
     }
 
+    const dateDisplay = formatDateRangeDisplay(card.startDate, card.startTime, card.endDate, card.endTime)
+      || (card.dueDate ? formatDateDisplay(card.dueDate, null) : null);
     const popupHtml = `
       <strong>${escapeHtml(card.title)}</strong><br>
       ${card.description ? escapeHtml(card.description) + '<br>' : ''}
       ${addressHtml}
-      ${card.dueDate ? '📅 ' + escapeHtml(card.dueDate) : ''}
+      ${dateDisplay ? '📅 ' + escapeHtml(dateDisplay) : ''}
     `;
 
     m.bindPopup(popupHtml);
@@ -1284,11 +1392,13 @@ function renderDetailMiniMarkers(focusedCardId) {
       `;
     }
 
+    const miniDateDisplay = formatDateRangeDisplay(c.startDate, c.startTime, c.endDate, c.endTime)
+      || (c.dueDate ? formatDateDisplay(c.dueDate, null) : null);
     const popupHtml = `
       <strong>${escapeHtml(c.title)}</strong><br>
       ${c.description ? escapeHtml(c.description) + '<br>' : ''}
       ${addressHtml}
-      ${c.dueDate ? '📅 ' + escapeHtml(c.dueDate) : ''}
+      ${miniDateDisplay ? '📅 ' + escapeHtml(miniDateDisplay) : ''}
     `;
 
     marker.bindPopup(popupHtml);

@@ -630,6 +630,52 @@ body {
   font-size: 14px;
 }
 
+/* Date/Time Row */
+.date-time-row,
+.date-time-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.date-time-row .date-input,
+.date-time-edit-row .date-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.date-time-row .time-input,
+.date-time-edit-row .time-input {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.time-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.time-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.time-toggle label {
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 /* Checklist */
 .checklist-item {
   display: flex;

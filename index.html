@@ -190,8 +190,29 @@
 
       <div class="card-detail-section">
         <div class="card-detail-field">
-          <label>Date d'échéance</label>
-          <input type="date" class="card-detail-input" id="cardDueDateInput">
+          <label>Date de début</label>
+          <div class="date-time-row">
+            <input type="date" class="card-detail-input date-input" id="cardStartDateInput">
+            <div class="time-toggle">
+              <input type="checkbox" id="cardStartTimeToggle" onchange="toggleTimeInput('cardStartTime', this.checked)">
+              <label for="cardStartTimeToggle">Heure</label>
+            </div>
+            <input type="time" class="card-detail-input time-input" id="cardStartTimeInput" step="1" style="display:none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Date de fin</label>
+          <div class="date-time-row">
+            <input type="date" class="card-detail-input date-input" id="cardEndDateInput">
+            <div class="time-toggle">
+              <input type="checkbox" id="cardEndTimeToggle" onchange="toggleTimeInput('cardEndTime', this.checked)">
+              <label for="cardEndTimeToggle">Heure</label>
+            </div>
+            <input type="time" class="card-detail-input time-input" id="cardEndTimeInput" step="1" style="display:none;">
+          </div>
         </div>
       </div>
 
@@ -320,11 +341,33 @@
 
       <div class="card-detail-section">
         <div class="card-detail-field">
-          <label>Date d'échéance</label>
-          <div class="card-detail-value" id="detailDate" onclick="editCardField('dueDate')"></div>
-          <input type="date" class="card-detail-input" id="detailDateInput" style="display:none;"
-                 onkeydown="saveCardField(event,'dueDate')"
-                 onblur="saveCardField({type:'blur'},'dueDate')">
+          <label>Date de début</label>
+          <div class="card-detail-value" id="detailStartDate" onclick="editCardField('startDate')"></div>
+          <div id="detailStartDateInput" class="date-time-edit-row" style="display:none;">
+            <input type="date" class="card-detail-input date-input" id="detailStartDateDateInput">
+            <div class="time-toggle">
+              <input type="checkbox" id="detailStartTimeToggle" onchange="toggleTimeInput('detailStartTime', this.checked)">
+              <label for="detailStartTimeToggle">Heure</label>
+            </div>
+            <input type="time" class="card-detail-input time-input" id="detailStartTimeInput" step="1" style="display:none;">
+            <button class="btn btn-primary btn-sm" onclick="saveCardField(null,'startDate')">OK</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-detail-section">
+        <div class="card-detail-field">
+          <label>Date de fin</label>
+          <div class="card-detail-value" id="detailEndDate" onclick="editCardField('endDate')"></div>
+          <div id="detailEndDateInput" class="date-time-edit-row" style="display:none;">
+            <input type="date" class="card-detail-input date-input" id="detailEndDateDateInput">
+            <div class="time-toggle">
+              <input type="checkbox" id="detailEndTimeToggle" onchange="toggleTimeInput('detailEndTime', this.checked)">
+              <label for="detailEndTimeToggle">Heure</label>
+            </div>
+            <input type="time" class="card-detail-input time-input" id="detailEndTimeInput" step="1" style="display:none;">
+            <button class="btn btn-primary btn-sm" onclick="saveCardField(null,'endDate')">OK</button>
+          </div>
         </div>
       </div>
 
