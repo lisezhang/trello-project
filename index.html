@@ -124,7 +124,19 @@
 
       <div class="modal-header">
         <h2 id="cardModalTitle">Ajouter une carte</h2>
-        <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
+        <div class="modal-header-actions">
+          <div class="dropdown" id="addCardAddDropdown">
+            <button class="dropdown-toggle add-dropdown-toggle" onclick="toggleAddCardAddMenu()">
+              <i class="fas fa-plus"></i>
+            </button>
+            <div class="dropdown-menu" id="addCardAddMenu">
+              <div class="dropdown-item" onclick="showAddCardChecklist()">
+                <i class="fas fa-tasks"></i> Ajouter une checklist
+              </div>
+            </div>
+          </div>
+          <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
+        </div>
       </div>
 
       <!-- Cover Image Button -->
@@ -204,7 +216,7 @@
         </div>
       </div>
 
-      <div class="card-detail-section">
+      <div class="card-detail-section" id="addCardChecklistSection" style="display:none;">
         <label style="font-weight:700;color:#333;font-size:14px;">Checklist</label>
         <div class="checklist-section" id="addCardChecklistContainer"></div>
         <div class="add-checklist-item" onclick="addCardChecklistItem()">+ Ajouter un item</div>
@@ -227,6 +239,16 @@
       <div class="modal-header">
         <h2 id="detailCardTitle">Détails de la carte</h2>
         <div class="modal-header-actions">
+          <div class="dropdown" id="detailAddDropdown">
+            <button class="dropdown-toggle add-dropdown-toggle" onclick="toggleDetailAddMenu()">
+              <i class="fas fa-plus"></i>
+            </button>
+            <div class="dropdown-menu" id="detailAddMenu">
+              <div class="dropdown-item" onclick="showDetailChecklist()">
+                <i class="fas fa-tasks"></i> Ajouter une checklist
+              </div>
+            </div>
+          </div>
           <div class="dropdown" id="cardOptionsDropdown">
             <button class="dropdown-toggle" onclick="toggleCardOptionsMenu()">
               <i class="fas fa-ellipsis-h"></i>
@@ -334,7 +356,7 @@
         </div>
       </div>
 
-      <div class="card-detail-section">
+      <div class="card-detail-section" id="detailChecklistSection" style="display:none;">
         <label style="font-weight:700;color:#333;font-size:14px;">Checklist</label>
         <div class="checklist-section" id="checklistContainer"></div>
         <div class="add-checklist-item" onclick="addChecklistItem()">+ Ajouter un item</div>

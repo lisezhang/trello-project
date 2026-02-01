@@ -421,6 +421,26 @@ body {
   background: #fdf2f2;
 }
 
+/* Add dropdown toggle button ('+' button) */
+.add-dropdown-toggle {
+  background: #0079bf;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.add-dropdown-toggle:hover {
+  background: #026aa7;
+}
+
+.add-dropdown-toggle i {
+  font-size: 12px;
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 15px;

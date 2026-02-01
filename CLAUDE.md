@@ -98,6 +98,10 @@ trello-project/
 - Conservation de la vue même après suppression de toutes les cartes
 
 ### 8. Checklist
+- **Affichage conditionnel** : la section checklist n'apparaît que si on l'ajoute via le menu "+" ou si la carte a déjà des items
+- **Bouton "+"** : présent à gauche du menu "..." dans les headers des modals de création et modification
+  - Menu déroulant avec option "Ajouter une checklist"
+  - Prévu pour d'autres fonctionnalités futures (pièces jointes, liens, etc.)
 - Ajout/suppression d'items
 - Checkbox coché/décoché
 - Historisation de toutes les actions
@@ -250,6 +254,10 @@ let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCar
 | `clearAllFilters()` | Supprime tous les filtres actifs |
 | `updateFilterIndicator()` | Met à jour l'indicateur de filtres dans la navbar |
 | `getFilteredCards(cardsList)` | Filtre les cartes selon les étiquettes actives (logique ET) |
+| `toggleAddCardAddMenu()` | Toggle le menu "+" du modal d'ajout |
+| `toggleDetailAddMenu()` | Toggle le menu "+" du modal de détail |
+| `showAddCardChecklist()` | Affiche la section checklist dans le modal d'ajout |
+| `showDetailChecklist()` | Affiche la section checklist dans le modal de détail |
 
 ### Constantes de Configuration
 ```javascript
