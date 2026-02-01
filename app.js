@@ -61,9 +61,10 @@ function init() {
   // First launch: create default lists, no demo cards
   if (lists.length === 0) {
     lists = [
-      { id: 1, title: 'À faire' },
-      { id: 2, title: 'En cours' },
-      { id: 3, title: 'Terminé' }
+      { id: 1, title: 'Checklist' },
+      { id: 2, title: 'Circuit' },
+      { id: 3, title: 'Documents' },
+      { id: 4, title: 'Hôtels' }
     ];
     cards = [];
     saveData();
