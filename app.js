@@ -6,6 +6,7 @@ let currentCardId = null;
 
 let selectedLabels = [];        // IDs of selected labels for add card modal
 let detailSelectedLabels = [];  // IDs of selected labels for detail modal
+let activeFilters = [];         // IDs of labels used for filtering (AND logic, not persisted)
 
 // Custom labels system
 let customLabels = [];          // Array of { id, name, color }
@@ -153,7 +154,10 @@ function createListElement(list) {
   cardsContainer.id = `cards-${list.id}`;
   cardsContainer.setAttribute('data-list-id', list.id);
 
-  cards.filter(c => c.listId === list.id).forEach(card => {
+  // Apply filter to cards in this list
+  const listCards = cards.filter(c => c.listId === list.id);
+  const filteredListCards = getFilteredCards(listCards);
+  filteredListCards.forEach(card => {
     cardsContainer.appendChild(createCardElement(card));
   });
 
@@ -1095,6 +1099,21 @@ function getCardsWithCoords() {
   return cards.filter(c => c.coordinates && typeof c.coordinates.lat === 'number' && typeof c.coordinates.lon === 'number');
 }
 
+// Get cards filtered by active label filters (AND logic)
+function getFilteredCards(cardsList) {
+  if (activeFilters.length === 0) {
+    return cardsList;
+  }
+  return cardsList.filter(card => {
+    // Card must have all selected filter labels (AND logic)
+    // Cards without labels are hidden when filters are active
+    if (!card.labels || card.labels.length === 0) {
+      return false;
+    }
+    return activeFilters.every(filterId => card.labels.includes(filterId));
+  });
+}
+
 function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
   if (!map || !markersLayer) return;
 
@@ -1108,7 +1127,8 @@ function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
     return;
   }
 
-  const cardsWithCoords = getCardsWithCoords();
+  // Apply filter to cards with coordinates
+  const cardsWithCoords = getFilteredCards(getCardsWithCoords());
   const count = cardsWithCoords.length;
 
   cardsWithCoords.forEach(card => {
@@ -1150,7 +1170,8 @@ function renderMapMarkers({ fit, reason } = { fit: false, reason: 'unknown' }) {
 
 function fitMapToMarkers(animate) {
   if (!map) return;
-  const cardsWithCoords = getCardsWithCoords();
+  // Apply filter to cards with coordinates
+  const cardsWithCoords = getFilteredCards(getCardsWithCoords());
   if (cardsWithCoords.length === 0) return; // keep map as is
 
   const bounds = L.latLngBounds(cardsWithCoords.map(c => [c.coordinates.lat, c.coordinates.lon]));
@@ -1364,6 +1385,7 @@ window.onmouseup = (event) => {
   const cardDetailModal = document.getElementById('cardDetailModal');
   const deleteListModal = document.getElementById('deleteListModal');
   const labelsManagementModal = document.getElementById('labelsManagementModal');
+  const labelFilterModal = document.getElementById('labelFilterModal');
 
   const addressAutocomplete = document.getElementById('addressAutocomplete');
 
@@ -1372,6 +1394,7 @@ window.onmouseup = (event) => {
   if (event.target === cardDetailModal) closeCardDetailModal();
   if (event.target === deleteListModal) closeDeleteListModal();
   if (event.target === labelsManagementModal) closeLabelsManagementModal();
+  if (event.target === labelFilterModal) closeLabelFilterModal();
 
   if (!event.target.closest('.form-group-relative') && addressAutocomplete) {
     addressAutocomplete.style.display = 'none';
@@ -2395,6 +2418,110 @@ function deleteLabel(labelId) {
     const card = cards.find(c => c.id === currentCardId);
     if (card) renderDetailLabels(card);
     renderDetailLabelSelector();
+  }
+}
+
+// -------------------------
+// Label Filter Modal
+// -------------------------
+function openLabelFilterModal() {
+  document.getElementById('labelFilterModal').classList.add('show');
+  renderLabelFilterModal();
+}
+
+function closeLabelFilterModal() {
+  document.getElementById('labelFilterModal').classList.remove('show');
+}
+
+function renderLabelFilterModal() {
+  const activeSection = document.getElementById('activeFiltersSection');
+  const activeList = document.getElementById('activeFiltersList');
+  const filterList = document.getElementById('filterLabelsList');
+
+  // Render active filters
+  if (activeFilters.length > 0) {
+    activeSection.style.display = 'block';
+    activeList.innerHTML = '';
+    activeFilters.forEach(labelId => {
+      const label = getLabelById(labelId);
+      if (label) {
+        const badge = document.createElement('span');
+        badge.className = 'filter-label-badge';
+        badge.style.backgroundColor = label.color;
+        badge.innerHTML = `${escapeHtml(label.name)} <button type="button" onclick="toggleFilterLabel(${label.id})">&times;</button>`;
+        activeList.appendChild(badge);
+      }
+    });
+  } else {
+    activeSection.style.display = 'none';
+  }
+
+  // Render available labels
+  filterList.innerHTML = '';
+  if (customLabels.length === 0) {
+    filterList.innerHTML = '<div class="filter-labels-empty">Aucune étiquette disponible. Créez des étiquettes via le menu "Gérer les étiquettes".</div>';
+    return;
+  }
+
+  customLabels.forEach(label => {
+    const isActive = activeFilters.includes(label.id);
+    const item = document.createElement('div');
+    item.className = 'filter-label-item' + (isActive ? ' active' : '');
+    item.innerHTML = `
+      <span class="filter-label-color" style="background-color: ${label.color}"></span>
+      <span class="filter-label-name">${escapeHtml(label.name)}</span>
+      ${isActive ? '<i class="fas fa-check"></i>' : ''}
+    `;
+    item.onclick = () => toggleFilterLabel(label.id);
+    filterList.appendChild(item);
+  });
+}
+
+function toggleFilterLabel(labelId) {
+  const idx = activeFilters.indexOf(labelId);
+  if (idx > -1) {
+    activeFilters.splice(idx, 1);
+  } else {
+    activeFilters.push(labelId);
+  }
+
+  // Re-render modal
+  renderLabelFilterModal();
+
+  // Update board and map
+  renderBoard();
+  renderMapMarkers({ fit: false, reason: 'filter' });
+
+  // Update filter indicator
+  updateFilterIndicator();
+}
+
+function clearAllFilters() {
+  activeFilters = [];
+
+  // Re-render modal if open
+  if (document.getElementById('labelFilterModal').classList.contains('show')) {
+    renderLabelFilterModal();
+  }
+
+  // Update board and map
+  renderBoard();
+  renderMapMarkers({ fit: true, reason: 'clearFilters' });
+
+  // Update filter indicator
+  updateFilterIndicator();
+}
+
+function updateFilterIndicator() {
+  const indicator = document.getElementById('filterIndicator');
+  const countSpan = document.getElementById('filterCount');
+
+  if (activeFilters.length > 0) {
+    indicator.style.display = 'flex';
+    indicator.setAttribute('data-count', activeFilters.length);
+    countSpan.textContent = activeFilters.length;
+  } else {
+    indicator.style.display = 'none';
   }
 }
 
