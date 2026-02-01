@@ -898,7 +898,7 @@ async function performAddressSearch(query) {
         ac.style.display = 'none';
 
         // Show mini-map with selected address
-        showAddCardMiniMap(parseFloat(r.lat), parseFloat(r.lon));
+        showAddCardMiniMap(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
       };
       ac.appendChild(item);
     });
@@ -912,7 +912,7 @@ async function performAddressSearch(query) {
 // -------------------------
 // Mini-map for Add Card modal
 // -------------------------
-function showAddCardMiniMap(lat, lon) {
+function showAddCardMiniMap(lat, lon, address) {
   const container = document.getElementById('addCardMiniMapContainer');
   container.style.display = 'block';
 
@@ -936,6 +936,24 @@ function showAddCardMiniMap(lat, lon) {
 
   // Add marker at selected location
   addCardMiniMarker = L.marker([lat, lon]).addTo(addCardMiniMap);
+
+  // Build popup HTML with clickable address link (same as detail modal)
+  const title = document.getElementById('cardTitleInput').value || 'Nouvelle carte';
+  let addressHtml = '';
+  if (address) {
+    addressHtml = `
+      <span class="popup-address-link" onclick='openMapsChoiceModal(${lat}, ${lon}, ${JSON.stringify(address)}, event)'>
+        📍 ${escapeHtml(address)} <i class="fas fa-external-link-alt"></i>
+      </span>
+    `;
+  }
+
+  const popupHtml = `
+    <strong>${escapeHtml(title)}</strong><br>
+    ${addressHtml}
+  `;
+
+  addCardMiniMarker.bindPopup(popupHtml);
 
   // Invalidate size after display
   requestAnimationFrame(() => {
