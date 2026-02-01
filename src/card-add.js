@@ -86,7 +86,7 @@ async function performAddressSearch(query) {
 // Add Card Modal
 // -------------------------
 
-export function openAddCardModal() {
+export function openAddCardModal(prefillDate = null) {
   // Close any other open modals first
   closeCardDetailModal();
   closeLabelsManagementModal();
@@ -100,8 +100,8 @@ export function openAddCardModal() {
   document.getElementById('cardTitleInput').value = '';
   document.getElementById('cardDescriptionInput').value = '';
   document.getElementById('cardAddressInput').value = '';
-  // Reset start date/time fields
-  document.getElementById('cardStartDateInput').value = '';
+  // Reset start date/time fields - or prefill if provided
+  document.getElementById('cardStartDateInput').value = prefillDate || '';
   document.getElementById('cardStartTimeInput').value = '';
   document.getElementById('cardStartTimeInput').style.display = 'none';
   document.getElementById('cardStartTimeToggle').checked = false;

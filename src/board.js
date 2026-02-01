@@ -36,6 +36,12 @@ export function renderBoard() {
 
   // Initialize SortableJS for drag & drop (works on mobile)
   initSortable();
+
+  // Also update calendar if it's the active view
+  const calendarSection = document.getElementById('calendarSection');
+  if (calendarSection && calendarSection.classList.contains('active') && window.renderCalendar) {
+    window.renderCalendar();
+  }
 }
 
 export function createListElement(list) {

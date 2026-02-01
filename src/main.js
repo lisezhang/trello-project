@@ -14,6 +14,7 @@ import { openAddListModal, closeAddListModal, saveNewList, openDeleteListModal, 
 import { openAddCardModal, closeAddCardModal, saveNewCard, searchAddress, showAddCardChecklist, addCardChecklistItem, toggleAddCardAddMenu, closeAddCardAddMenu } from './card-add.js';
 import { openCardDetailModal, closeCardDetailModal, toggleCardOptionsMenu, closeCardOptionsMenu, toggleNavbarOptionsMenu, closeNavbarOptionsMenu, toggleDetailAddMenu, closeDetailAddMenu, showDetailChecklist, editCardField, saveCardField, deleteCard, addChecklistItem, searchDetailAddress, renderChecklist, renderHistory } from './card-detail.js';
 import { toggleLabelSelection, toggleDetailLabelSelection, renderAddCardLabelSelector, renderDetailLabelSelector, handleAddCardLabelSearch, handleDetailLabelSearch, quickCreateLabel, openLabelsManagementModal, closeLabelsManagementModal, renderLabelsManagementList, saveLabel, editLabel, cancelEditLabel, deleteLabel, renderPaletteColors, selectPaletteColor, updatePaletteFromInput, openLabelFilterModal, closeLabelFilterModal, renderLabelFilterModal, toggleFilterLabel, clearAllFilters, updateFilterIndicator, renderDetailLabels, getFilteredCards } from './labels.js';
+import { initCalendar, renderCalendar, navigateMonth, goToToday } from './calendar.js';
 
 // -------------------------
 // Initialize Application
@@ -23,11 +24,12 @@ function init() {
   initState();
   initBoard();
   initMap();
+  initCalendar();
 
   // Preload markers
   renderMapMarkers({ fit: true, reason: 'init' });
 
-  // Restore last view (board/map)
+  // Restore last view (board/map/calendar)
   restoreLastView();
 }
 
@@ -202,6 +204,11 @@ window.openMapsChoiceModal = openMapsChoiceModal;
 window.closeMapsChoiceModal = closeMapsChoiceModal;
 window.openInGoogleMaps = openInGoogleMaps;
 window.openInAppleMaps = openInAppleMaps;
+
+// Calendar
+window.renderCalendar = renderCalendar;
+window.navigateMonth = navigateMonth;
+window.goToToday = goToToday;
 
 // Helpers
 window.toggleTimeInput = toggleTimeInput;
