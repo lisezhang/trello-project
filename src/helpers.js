@@ -127,3 +127,64 @@ export function rgbToHex(rgb) {
 export function getLabelById(id, customLabels) {
   return customLabels.find(l => l.id === id);
 }
+
+// -------------------------
+// Calendar Helpers
+// -------------------------
+
+/**
+ * Get French month name
+ * @param {number} month - Month index (0-11)
+ * @returns {string} French month name
+ */
+export function getMonthNameFR(month) {
+  const months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  return months[month];
+}
+
+/**
+ * Get number of days in a month
+ * @param {number} year - Year
+ * @param {number} month - Month index (0-11)
+ * @returns {number} Number of days in the month
+ */
+export function getDaysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+/**
+ * Get the day of week for the first day of a month (Monday-first)
+ * @param {number} year - Year
+ * @param {number} month - Month index (0-11)
+ * @returns {number} Day of week (0=Monday, 6=Sunday)
+ */
+export function getFirstDayOfMonth(year, month) {
+  const day = new Date(year, month, 1).getDay();
+  return day === 0 ? 6 : day - 1;
+}
+
+/**
+ * Format date as YYYY-MM-DD
+ * @param {number} year
+ * @param {number} month - Month index (0-11)
+ * @param {number} day
+ * @returns {string} Date in YYYY-MM-DD format
+ */
+export function formatDateISO(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * Check if two dates are the same day
+ * @param {Date} date1
+ * @param {Date} date2
+ * @returns {boolean}
+ */
+export function isSameDay(date1, date2) {
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
+}

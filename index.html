@@ -29,6 +29,9 @@
         <button id="btnViewMap" onclick="switchView('map')">
           <i class="fas fa-map"></i> Map
         </button>
+        <button id="btnViewCalendar" onclick="switchView('calendar')">
+          <i class="fas fa-calendar-alt"></i> Calendrier
+        </button>
       </div>
 
       <div class="filter-indicator" id="filterIndicator" style="display: none;" onclick="openLabelFilterModal()">
@@ -78,6 +81,31 @@
           <i class="fas fa-eraser"></i> Masquer les marqueurs (visuel)
         </button>
       </div>
+    </div>
+
+    <div class="calendar-section" id="calendarSection">
+      <div class="calendar-header">
+        <button class="calendar-nav-btn" onclick="navigateMonth(-1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <h2 id="calendarTitle">Janvier 2024</h2>
+        <button class="calendar-nav-btn" onclick="navigateMonth(1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <button class="btn btn-secondary calendar-today-btn" onclick="goToToday()">
+          Aujourd'hui
+        </button>
+      </div>
+      <div class="calendar-weekdays">
+        <div class="calendar-weekday">Lun</div>
+        <div class="calendar-weekday">Mar</div>
+        <div class="calendar-weekday">Mer</div>
+        <div class="calendar-weekday">Jeu</div>
+        <div class="calendar-weekday">Ven</div>
+        <div class="calendar-weekday">Sam</div>
+        <div class="calendar-weekday">Dim</div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
   </div>
 

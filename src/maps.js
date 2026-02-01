@@ -189,19 +189,29 @@ export function restoreLastView() {
 export function switchView(view, opts = { fromInit: false }) {
   const boardSection = document.getElementById('boardSection');
   const mapSection = document.getElementById('mapSection');
+  const calendarSection = document.getElementById('calendarSection');
 
   const btnBoard = document.getElementById('btnViewBoard');
   const btnMap = document.getElementById('btnViewMap');
+  const btnCalendar = document.getElementById('btnViewCalendar');
 
+  // Remove active from all buttons
   btnBoard.classList.remove('active');
   btnMap.classList.remove('active');
+  btnCalendar.classList.remove('active');
+
+  // Hide all sections
+  boardSection.classList.remove('active');
+  mapSection.classList.remove('active');
+  calendarSection.classList.remove('active');
 
   if (view === 'map') {
-    boardSection.classList.remove('active');
     mapSection.classList.add('active');
     btnMap.classList.add('active');
+  } else if (view === 'calendar') {
+    calendarSection.classList.add('active');
+    btnCalendar.classList.add('active');
   } else {
-    mapSection.classList.remove('active');
     boardSection.classList.add('active');
     btnBoard.classList.add('active');
   }
@@ -215,6 +225,13 @@ export function switchView(view, opts = { fromInit: false }) {
       // If we have markers, fitBounds is possible (otherwise keep view)
       renderMapMarkers({ fit: false, reason: 'switchView' });
     }, 250);
+  } else if (view === 'calendar') {
+    // Render calendar when switching to it
+    setTimeout(() => {
+      if (window.renderCalendar) {
+        window.renderCalendar();
+      }
+    }, 100);
   }
 }
 
