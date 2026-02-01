@@ -116,6 +116,7 @@ trello-project/
 - **Scroll manuel libre** : l'utilisateur peut scroller librement pour voir le haut (header, image de couverture) ou le bas de la modal à tout moment
 - **Pas de scroll agressif** : contrairement à un centrage forcé, le système ne scroll que si nécessaire pour rendre l'input visible
 - **Modal alignée en haut** : sur mobile, la modal reste en haut de l'écran (pas centrée) même après fermeture du clavier
+- **Préservation du scroll à la fermeture du clavier** : la position de scroll du modal est sauvegardée avant le retrait de la classe `keyboard-open` et restaurée après le recalcul du layout (double `requestAnimationFrame`), avec désactivation temporaire de `scroll-behavior: smooth` pour une restauration instantanée
 - **Couverture complète garantie** : le backdrop du modal couvre TOUJOURS tout l'écran avec `position: fixed` + `top/left/right/bottom: 0` + `width: 100vw` + `height: 100vh`
 - **Hauteur fixe du modal** : le modal garde `height: 100vh` même quand le clavier est ouvert (ne jamais utiliser `--visual-viewport-height` pour la hauteur du modal, sinon le fond du board apparaît)
 - **Overlay adaptatif** : overlay plus sombre (`rgba(0,0,0,0.7)` normal, `rgba(0,0,0,0.85-0.9)` avec clavier) pour masquer l'arrière-plan
@@ -363,6 +364,7 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 - **IMPORTANT marges avec clavier** : utiliser des valeurs fixes (`margin-top: 5px`, `margin-bottom: 20px`) et NON `calc(var(--keyboard-height) + Xpx)` qui crée des décalages de scroll (header coupé en haut, grand espace en bas)
 - Le modal mobile utilise `position: fixed` avec `top/left/right/bottom: 0` + `width: 100vw` pour couvrir tout l'écran
 - **Scroll intelligent sur iOS** : le scroll vers l'input ne se fait que si l'élément n'est pas dans la zone visible (20%-70% de l'écran), permettant à l'utilisateur de voir le haut de la modal (header, image de couverture)
+- **Préservation scroll fermeture clavier** : `handleKeyboardChange()` sauvegarde `scrollTop` avant retrait de `keyboard-open` et le restaure via double `requestAnimationFrame` avec `scroll-behavior: auto` temporaire
 - **MutationObserver** : surveille l'ouverture des modals pour reset le scroll à 0 et recalculer la hauteur initiale du viewport
 - **Fermeture des modals** : `openAddCardModal()` et `openCardDetailModal()` ferment les autres modals avant de s'ouvrir pour éviter les superpositions
 - **Upload d'images iOS** : ne jamais réinitialiser `input.value` avant la fin de `FileReader.readAsDataURL()` car iOS Safari peut invalider la référence au fichier
