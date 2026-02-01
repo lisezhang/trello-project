@@ -1,302 +1,76 @@
-# CLAUDE.md - Analyse du Projet Trello Clone avec Carte
+# CLAUDE.md - Projet Trello Clone avec Carte
 
 ## Résumé du Projet
 
 Application web de type **Trello (Kanban)** enrichie d'une **carte interactive Leaflet/OpenStreetMap** pour géolocaliser les cartes. L'application permet de gérer des listes de tâches, des cartes détaillées avec adresses géolocalisées, et offre une visualisation cartographique complète.
 
-**Stack technique** : HTML5, CSS3, JavaScript ES6+ (vanilla), Leaflet.js 1.9.4, OpenStreetMap, API Nominatim, Unsplash (images prédéfinies)
+**Stack technique** : HTML5, CSS3, JavaScript ES6+ (modules), Leaflet.js 1.9.4, OpenStreetMap, API Nominatim, Unsplash (images prédéfinies)
 
 ## Structure des Fichiers
 
 ```
 trello-project/
-├── index.html          # Structure HTML et modals
-├── styles.css          # Styles CSS (layout, composants, responsive)
-├── app.js              # Logique JavaScript complète
-├── CLAUDE.md           # Documentation du projet
-├── README.md           # Readme initial
-└── trello-projet.md    # Specs originales (format RTF)
+├── index.html              # Structure HTML et modals
+├── styles.css              # Styles CSS (layout, composants, responsive)
+├── CLAUDE.md               # Documentation projet (ce fichier)
+├── README.md               # Readme initial
+├── trello-projet.md        # Specs originales
+└── src/                    # Modules JavaScript ES6
+    ├── CLAUDE.md           # Documentation technique détaillée des modules
+    ├── main.js             # Point d'entrée, orchestration
+    ├── state.js            # État global, localStorage
+    ├── constants.js        # Constantes (map, couleurs, images)
+    ├── helpers.js          # Utilitaires purs
+    ├── board.js            # Rendu board, drag & drop (SortableJS)
+    ├── card-add.js         # Modal ajout carte
+    ├── card-detail.js      # Modal détail carte
+    ├── maps.js             # Grande carte Leaflet
+    ├── mini-maps.js        # Mini-cartes dans modals
+    ├── images.js           # Gestion images couverture
+    ├── labels.js           # Système étiquettes + filtrage
+    ├── links.js            # Gestion liens internet
+    ├── lists.js            # Modals listes
+    └── mobile.js           # Gestion clavier mobile
 ```
 
 ### Dépendances externes (CDN)
 - Font Awesome 6.4.0 (icônes)
 - Leaflet 1.9.4 (cartographie)
+- SortableJS (drag & drop)
 
 ---
 
-## Fonctionnalités Réalisées
+## Fonctionnalités
 
-### 1. Gestion des Listes
-- Création de listes avec nom personnalisé
-- Renommage en édition inline (clic sur le titre)
-- Suppression avec choix : déplacer vers "Archives" ou supprimer les cartes
+### Gestion des Listes
+- Création, renommage (édition inline), suppression
+- Choix à la suppression : archiver ou supprimer les cartes
 - Drag & drop des cartes entre listes
 
-### 2. Gestion des Cartes
-- Création avec : titre (obligatoire), description, adresse (auto-complétion), coordonnées GPS, date d'échéance, étiquettes (8 couleurs)
-- **Image de couverture** : recherche par mots-clés (collections Unsplash prédéfinies)
-- Affichage des labels colorés sur chaque carte
-- **Miniature de l'image** affichée sur la carte dans le board
+### Gestion des Cartes
+- Création avec titre, description, adresse (auto-complétion), dates, étiquettes
+- Image de couverture (recherche, upload, URL)
+- Checklist avec items cochables
+- Liens internet avec titre et URL
+- Historique de toutes les modifications
 - Drag & drop entre colonnes
-- Suppression depuis le menu "..." du modal de détail
 
-### 3. Modal de Détail
-- **Image de couverture** : affichée en haut du modal
-- **Bouton "Couverture"** : ouvre une modal dédiée pour gérer l'image de couverture
-- **Titre** : édition inline + historisation
-- **Description** : édition textarea + sauvegarde blur/Enter
-- **Étiquettes** : sélecteur multi-couleurs
-- **Date de début** : champ date avec option d'ajouter l'heure (heures:minutes:secondes)
-- **Date de fin** : champ date avec option d'ajouter l'heure (heures:minutes:secondes)
-- **Adresse** : édition + auto-complétion Nominatim + mise à jour des coordonnées
+### Carte Interactive
+- Grande carte avec tous les marqueurs géolocalisés
+- Mini-cartes dans les modals
+- Recherche de lieu
+- Ouverture dans Google Maps / Apple Plans
+- Centrage intelligent (fitBounds)
 
-### 4. Modal d'Ajout de Carte
-- **Image de couverture** : affichée en haut du modal si sélectionnée
-- **Bouton "Couverture"** : ouvre une modal dédiée pour gérer l'image de couverture
-- Mini-carte affichée après sélection d'une adresse avec **popup cliquable** (identique au modal de détail) :
-  - Affiche le titre de la carte (ou "Nouvelle carte" si non rempli)
-  - Adresse cliquable pour ouvrir Google Maps ou Apple Plans
+### Étiquettes
+- Création d'étiquettes personnalisées (nom + couleur)
+- Filtrage par étiquettes (logique ET)
+- Indicateur de filtres actifs dans la navbar
 
-### 4b. Modal de Couverture (Image)
-- **Accès** : bouton "Couverture" dans les modals de création et modification de carte
-- **Modal compacte/overlay** : design léger, centré sur l'écran
-- **Recherche d'images** : champ de recherche par mots-clés (monuments, lieux, restaurants...)
-- **Import de fichier** : upload depuis l'ordinateur/téléphone (stockage Base64, max 5Mo)
-- **Coller un lien** : URL d'image depuis Google Images ou autre
-- **Supprimer l'image** : bouton visible uniquement si une image existe
-- **Fermeture automatique** : la modal se ferme après sélection/suppression d'une image
-
-### 5. Auto-complétion d'Adresses
-- Debounce 500ms sur la saisie
-- Appel API Nominatim
-- Stockage automatique des coordonnées GPS
-- Disponible dans le modal d'ajout ET le modal de détail
-
-### 6. Mini-carte (Modal Détail)
-- **Affichage conditionnel** : la mini-carte n'apparaît que si la carte possède des coordonnées valides
-- Affiche tous les points avec coordonnées
-- Marqueur spécial (plus gros) pour la carte courante
-- Popup complet sur chaque marqueur avec **adresse cliquable**
-- Recentrage de la mini-carte uniquement au clic
-
-### 6b. Adresses cliquables (Navigation externe)
-- **Dans le modal de détail** : bouton "Ouvrir" à côté de l'adresse (visible si coordonnées disponibles)
-- **Dans les popups des marqueurs** : lien cliquable sur l'adresse (grande carte, mini-carte détail et mini-carte ajout)
-- **Dans le modal d'ajout** : dès la sélection d'une adresse, le popup du marqueur permet d'ouvrir Google Maps ou Apple Plans
-- **Menu de choix** : modal permettant de choisir entre Google Maps ou Apple Plans
-- **Ouverture native** : sur mobile, ouvre directement l'application Maps si installée
-- **URLs utilisées** (affichent le nom de l'adresse, pas les coordonnées) :
-  - Google Maps : `https://www.google.com/maps/search/?api=1&query=ADRESSE`
-  - Apple Plans : `https://maps.apple.com/?q=ADRESSE&ll=LAT,LON`
-
-### 7. Grande Carte (Vue Map)
-- Marqueurs préchargés au démarrage
-- Centrage intelligent (`fitBounds`) avec padding et maxZoom
-- Barre de recherche de lieu
-- Bouton "Recentrer sur les marqueurs"
-- Bouton "Masquer les marqueurs (visuel)"
-- Conservation de la vue même après suppression de toutes les cartes
-
-### 8. Checklist
-- **Affichage conditionnel** : la section checklist n'apparaît que si on l'ajoute via le menu "+" ou si la carte a déjà des items
-- **Bouton "+"** : présent à gauche du menu "..." dans les headers des modals de création et modification
-  - Menu déroulant avec options "Ajouter une checklist" et "Ajouter un lien"
-- Ajout/suppression d'items
-- Checkbox coché/décoché
-- Historisation de toutes les actions
-
-### 8b. Liens Internet
-- **Affichage conditionnel** : la section liens n'apparaît que si on l'ajoute via le menu "+" ou si la carte a déjà des liens
-- **Accès** : via le menu "+" dans les headers des modals de création et modification
-- **Format** : titre (optionnel) + URL (obligatoire)
-- **Validation d'URL** : vérification automatique que l'URL est valide (http:// ou https://)
-- **Auto-complétion** : ajout automatique de "https://" si aucun protocole n'est spécifié
-- **Titre par défaut** : si aucun titre n'est fourni, l'URL est utilisée comme titre
-- **Actions** :
-  - Édition du titre et de l'URL
-  - Suppression individuelle
-  - Clic sur l'URL pour ouvrir dans un nouvel onglet
-- **Modal dédiée** : formulaire pour ajouter/modifier un lien avec validation en temps réel
-- **Historisation** : toutes les actions (ajout, modification, suppression) sont tracées
-
-### 9. Historique
-- Log de toutes les actions : création, modifications, checklist, liens, images
-- Affichage avec timestamp localisé (fr-FR)
-
-### 10. Vue Board vs Map
-- Toggle entre vue Kanban et vue Carte
-- Vue active persistée dans localStorage
-
-### 11. Persistance
-- `trelloLists` et `trelloCards` dans localStorage
-- Vue active (board/map) persistée
-- Dernière position de la carte (centre + zoom) persistée
-
-### 12. Gestion Mobile (Clavier Virtuel)
-- **Détection du clavier** : utilise l'API `visualViewport` (iOS/Android) avec fallback sur `window.resize`
-- **Scroll intelligent** : scroll minimal uniquement si l'élément focusé n'est pas visible dans la zone centrale (20%-70% de l'écran)
-- **Scroll manuel libre** : l'utilisateur peut scroller librement pour voir le haut (header, image de couverture) ou le bas de la modal à tout moment
-- **Pas de scroll agressif** : contrairement à un centrage forcé, le système ne scroll que si nécessaire pour rendre l'input visible
-- **Modal alignée en haut** : sur mobile, la modal reste en haut de l'écran (pas centrée) même après fermeture du clavier
-- **Préservation du scroll à la fermeture du clavier** : la position de scroll du modal est sauvegardée avant le retrait de la classe `keyboard-open` et restaurée après le recalcul du layout (double `requestAnimationFrame`), avec désactivation temporaire de `scroll-behavior: smooth` pour une restauration instantanée
-- **Couverture complète garantie** : le backdrop du modal couvre TOUJOURS tout l'écran avec `position: fixed` + `top/left/right/bottom: 0` + `width: 100vw` + `height: 100vh`
-- **Hauteur fixe du modal** : le modal garde `height: 100vh` même quand le clavier est ouvert (ne jamais utiliser `--visual-viewport-height` pour la hauteur du modal, sinon le fond du board apparaît)
-- **Overlay adaptatif** : overlay plus sombre (`rgba(0,0,0,0.7)` normal, `rgba(0,0,0,0.85-0.9)` avec clavier) pour masquer l'arrière-plan
-- **Variables CSS dynamiques** :
-  - `--visual-viewport-height` : hauteur visible du viewport (pour calculs internes uniquement, NE PAS utiliser pour la hauteur du modal)
-  - `--visual-viewport-offset` : décalage du viewport (utile sur iOS Safari)
-  - `--keyboard-height` : hauteur du clavier calculée dynamiquement (pour référence, mais non utilisée dans les marges)
-- **Marges minimales avec clavier** : `margin-top: 5px`, `padding-bottom: 30px`, `margin-bottom: 20px` - évite les décalages de scroll (ne PAS utiliser `calc(keyboard-height + Xpx)` qui crée des espaces excessifs)
-- **Blocage scroll body** : le scroll du body et du html est désactivé quand le clavier est ouvert
-- **Gestion orientation** : réinitialisation correcte de l'état du clavier lors d'un changement d'orientation
-- **MutationObserver** : reset du scroll à 0 et recalcul de la hauteur initiale à l'ouverture d'un modal
-- **Fermeture des autres modals** : à l'ouverture d'un modal, les autres modals sont automatiquement fermés pour éviter les superpositions
-- **Focus différé** : délai de 100ms avant de mettre le focus sur l'input pour laisser le modal se rendre correctement
-
-### 13. Étiquettes Personnalisées
-- **Création d'étiquettes** : nom + couleur personnalisée (palette prédéfinie ou sélecteur de couleur libre)
-- **Gestion via menu "..."** : modal dédiée accessible depuis :
-  - Le menu "..." de la **navbar** (en haut à droite du board)
-  - Le menu "..." du **modal de détail** d'une carte
-- **Création rapide** : taper un nom dans le champ de recherche et cliquer sur "Créer" pour créer instantanément une étiquette (couleur aléatoire auto-assignée)
-- **Sélection avec auto-complétion** : champ de recherche pour filtrer les étiquettes existantes
-- **Multi-sélection** : possibilité de sélectionner plusieurs étiquettes par carte
-- **Affichage avec nom** : les étiquettes s'affichent avec leur nom dans une pastille colorée
-- **Réutilisation globale** : les étiquettes créées sont disponibles pour toutes les cartes
-- **Persistance** : stockage dans `trelloCustomLabels` dans localStorage
-
-### 14. Filtrage par Étiquettes
-- **Accès** : via le menu "..." de la navbar > "Filtrer par étiquettes"
-- **Modal dédié** : affiche les étiquettes disponibles et les filtres actifs
-- **Logique ET** : seules les cartes ayant TOUTES les étiquettes sélectionnées sont affichées
-- **Cartes sans étiquettes** : masquées quand un filtre est actif
-- **Application globale** : le filtre s'applique à la fois sur le board (Kanban) et la grande carte (Map)
-- **Indicateur visuel** : badge dans la navbar indiquant le nombre de filtres actifs
-- **Suppression rapide** : bouton "×" sur l'indicateur pour supprimer tous les filtres
-- **Pas de persistance** : les filtres sont réinitialisés au rechargement de la page
-
-### 15. Layout Mobile (Navbar et Listes)
-- **Scroll bloqué au niveau body** : sur mobile, `html` et `body` sont en `position: fixed` avec `overflow: hidden` pour empêcher tout scroll global
-- **Scroll uniquement dans les listes** : seul le `.cards-container` a `overflow-y: auto`, le board lui-même ne scrolle pas verticalement
-- **Navbar compacte à hauteur fixe** : la navbar utilise `height` (pas seulement `min-height`) pour garantir une hauteur stricte
-- **Hauteurs explicites par breakpoint** :
-  - ≤768px (tablettes) : navbar `height: 50px`, container `height: calc(100dvh - 50px)`, listes `height: calc(100dvh - 80px)`
-  - ≤480px (mobiles) : navbar `height: 46px`, container `height: calc(100dvh - 46px)`, listes `height: calc(100dvh - 66px)`
-- **Support iOS Safari** : utilisation de `100dvh` (dynamic viewport height) avec fallback sur `100vh` pour gérer la barre d'adresse dynamique
-- **Boutons compacts** : les boutons Board/Map sont réduits pour tenir sur une ligne
-- **Listes à hauteur fixe** : `height` au lieu de `max-height` + `min-height: 0` sur `.cards-container` pour le bon fonctionnement du flex overflow
-- **Pas de chevauchement** : le calcul précis des hauteurs et le blocage du scroll global évitent toute superposition
-
-### 16. Upload d'Images Mobile (iOS Safari)
-- **Validation améliorée des types** : support des formats HEIC/HEIF (iOS), gestion des types MIME vides (fréquent sur iOS)
-- **Extensions supportées** : jpg, jpeg, png, gif, webp, bmp, heic, heif, tiff, tif
-- **Reset de l'input différé** : `input.value = ''` est appelé **après** la lecture complète du fichier (dans `reader.onload`) pour éviter l'invalidation de la référence fichier sur iOS Safari
-- **État de chargement** : variable `isImageUploading` bloque la soumission du formulaire pendant le chargement
-- **Indicateur visuel** : spinner et message "Chargement de l'image..." avec boutons désactivés
-- **Timeout de sécurité** : 30 secondes max pour la lecture d'un fichier, avec message d'erreur si dépassé
-- **Gestion complète des erreurs** : handlers `onerror` et `onabort` pour le FileReader
-
----
-
-## Structure du Code JavaScript
-
-### Variables d'État Principales
-```javascript
-let lists = [];              // Tableau des listes
-let cards = [];              // Tableau des cartes
-let map = null;              // Instance Leaflet (grande carte)
-let markers = {};            // markers[cardId] = L.marker
-let markersLayer = null;     // L.layerGroup pour la grande carte
-let detailMiniMap = null;    // Instance Leaflet (mini-carte détail)
-let addCardMiniMap = null;   // Instance Leaflet (mini-carte ajout)
-let addCardCoverImage = null; // Image temporaire pour nouvelle carte
-let isImageUploading = false; // État de chargement d'image (bloque la soumission)
-let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, address)
-let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET, non persisté)
-let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCard')
-let addCardLinks = [];       // Liens temporaires pour nouvelle carte
-let linkModalMode = null;    // Mode de la modal lien ('addCard' ou 'detail')
-let editingLinkIndex = null; // Index du lien en cours d'édition (null pour nouveau lien)
-```
-
-### Fonctions Clés
-
-| Fonction | Description |
-|----------|-------------|
-| `init()` | Point d'entrée, charge données, initialise carte |
-| `loadData()` / `saveData()` | Gestion localStorage |
-| `toggleTimeInput(inputPrefix, show)` | Affiche/masque le champ d'heure |
-| `formatDateDisplay(date, time)` | Formate une date/heure pour affichage (dd/mm/yyyy à HH:MM:SS) |
-| `formatDateRangeDisplay(startDate, startTime, endDate, endTime)` | Formate une plage de dates pour affichage |
-| `renderBoard()` | Reconstruit le DOM du Kanban |
-| `createListElement(list)` | Crée le DOM d'une liste |
-| `createCardElement(card)` | Crée le DOM d'une carte |
-| `renderMapMarkers({ fit, reason })` | Gère les marqueurs de la grande carte |
-| `fitMapToMarkers(animate)` | Calcule et applique fitBounds |
-| `initOrUpdateDetailMiniMap(card)` | Initialise/met à jour la mini-carte détail |
-| `showAddCardMiniMap(lat, lon, address)` | Affiche la mini-carte avec popup cliquable dans le modal d'ajout |
-| `renderDetailMiniMarkers(focusedCardId)` | Gère les marqueurs de la mini-carte |
-| `searchAddress(query)` | Auto-complétion modal ajout |
-| `searchDetailAddress(query)` | Auto-complétion modal détail |
-| `openCoverImageModal(mode)` | Ouvre le modal de gestion d'image de couverture |
-| `closeCoverImageModal()` | Ferme le modal de couverture |
-| `searchCoverImages()` | Recherche d'images dans le modal couverture (utilise `displayImageSearchResults`) |
-| `removeCoverImageFromModal()` | Supprime l'image via le modal couverture |
-| `displayImageSearchResults(query, container, mode)` | Affiche les résultats de recherche (modes: detail, addCard, cover-detail, cover-addCard) |
-| `displayLocalResults(images, query, container, mode)` | Affiche les images et gère la sélection (ferme modal couverture si mode cover-*) |
-| `selectCoverImage(url, credit)` | Sélectionne une image (carte existante) |
-| `selectAddCardCoverImage(url, credit)` | Sélectionne une image (nouvelle carte) |
-| `removeCoverImage()` | Supprime l'image de couverture (carte existante) |
-| `removeAddCardCoverImage()` | Supprime l'image de couverture (nouvelle carte) |
-| `toggleUrlInput(mode)` | Affiche/masque le champ URL (modes: detail, addCard, cover) |
-| `applyImageUrl(mode)` | Applique une image depuis URL (modes: detail, addCard, cover) |
-| `handleImageUpload(input, mode)` | Gère l'upload de fichier image (modes: detail, addCard, cover) |
-| `showImageUploadLoading(mode, show)` | Affiche/masque l'indicateur de chargement (modes: detail, addCard, cover) |
-| `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
-| `renderAddCardLabelSelector()` | Affiche le sélecteur d'étiquettes (modal ajout) |
-| `renderDetailLabelSelector()` | Affiche le sélecteur d'étiquettes (modal détail) |
-| `quickCreateLabel(name, mode)` | Crée une étiquette rapidement depuis le champ de recherche |
-| `openLabelsManagementModal()` | Ouvre le modal de gestion des étiquettes |
-| `saveLabel()` / `editLabel()` / `deleteLabel()` | CRUD des étiquettes personnalisées |
-| `getLabelById(id)` | Récupère une étiquette par son ID |
-| `openMapsChoiceModal(lat, lon, address, event)` | Ouvre le modal de choix Google Maps / Apple Plans |
-| `closeMapsChoiceModal()` | Ferme le modal de choix Maps |
-| `openInGoogleMaps()` | Ouvre l'adresse dans Google Maps |
-| `openInAppleMaps()` | Ouvre l'adresse dans Apple Plans |
-| `openLabelFilterModal()` | Ouvre le modal de filtrage par étiquettes |
-| `closeLabelFilterModal()` | Ferme le modal de filtrage |
-| `renderLabelFilterModal()` | Affiche les étiquettes et filtres actifs |
-| `toggleFilterLabel(labelId)` | Active/désactive un filtre d'étiquette |
-| `clearAllFilters()` | Supprime tous les filtres actifs |
-| `updateFilterIndicator()` | Met à jour l'indicateur de filtres dans la navbar |
-| `getFilteredCards(cardsList)` | Filtre les cartes selon les étiquettes actives (logique ET) |
-| `toggleAddCardAddMenu()` | Toggle le menu "+" du modal d'ajout |
-| `toggleDetailAddMenu()` | Toggle le menu "+" du modal de détail |
-| `showAddCardChecklist()` | Affiche la section checklist dans le modal d'ajout |
-| `showDetailChecklist()` | Affiche la section checklist dans le modal de détail |
-| `showAddCardLinks()` | Affiche la section liens dans le modal d'ajout |
-| `showDetailLinks()` | Affiche la section liens dans le modal de détail |
-| `openAddCardLinkForm()` | Ouvre le formulaire d'ajout de lien (modal ajout) |
-| `openDetailLinkForm()` | Ouvre le formulaire d'ajout de lien (modal détail) |
-| `openLinkModal()` | Ouvre le modal de création/modification de lien |
-| `closeLinkModal()` | Ferme le modal de lien |
-| `saveLink()` | Sauvegarde le lien (création ou modification) |
-| `renderAddCardLinks()` | Affiche les liens dans le modal d'ajout |
-| `renderDetailLinks(card)` | Affiche les liens dans le modal de détail |
-| `createLinkElement(link, index, mode)` | Crée le DOM d'un lien |
-| `editLink(index, mode)` | Ouvre le modal pour modifier un lien |
-| `deleteLink(index, mode)` | Supprime un lien |
-| `isValidUrl(string)` | Valide qu'une chaîne est une URL valide (http/https) |
-
-### Constantes de Configuration
-```javascript
-const DEFAULT_MAP_CENTER = [48.8566, 2.3522]; // Paris
-const DEFAULT_MAP_ZOOM = 6;
-const FIT_PADDING = [40, 40];
-const FIT_MAX_ZOOM = 8;
-const IMAGE_COLLECTIONS = { ... }; // Collections d'images Unsplash par catégorie
-const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies pour les étiquettes
-```
+### Mobile
+- Support iOS Safari et Android
+- Gestion du clavier virtuel
+- Layout responsive
 
 ---
 
@@ -304,10 +78,7 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 
 ### Liste
 ```javascript
-{
-  id: number,
-  title: string
-}
+{ id: number, title: string }
 ```
 
 ### Carte
@@ -317,32 +88,25 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
   listId: number,
   title: string,
   description: string,
-  labels: number[],        // IDs des étiquettes personnalisées
+  labels: number[],                    // IDs des étiquettes
   address: string,
-  coordinates: { lat: number, lon: number } | null,
-  startDate: string | null,        // Date de début (format YYYY-MM-DD)
-  startTime: string | null,        // Heure de début (format HH:MM:SS, optionnel)
-  endDate: string | null,          // Date de fin (format YYYY-MM-DD)
-  endTime: string | null,          // Heure de fin (format HH:MM:SS, optionnel)
-  coverImage: string | null,       // URL ou Base64 de l'image
-  coverImageCredit: string | null, // Source (Unsplash, Lien externe, Image importée)
-  checklist: [{ text: string, completed: boolean }],
-  links: [{ title: string, url: string }],  // Liens internet
-  history: [{ action: string, timestamp: string }],
+  coordinates: { lat, lon } | null,
+  startDate: string | null,            // YYYY-MM-DD
+  startTime: string | null,            // HH:MM:SS
+  endDate: string | null,
+  endTime: string | null,
+  coverImage: string | null,           // URL ou Base64
+  coverImageCredit: string | null,
+  checklist: [{ text, completed }],
+  links: [{ title, url }],
+  history: [{ action, timestamp }],
   createdAt: string
 }
 ```
 
-> **Note de migration** : L'ancien champ `dueDate` est toujours supporté pour la rétrocompatibilité.
-> Les nouvelles cartes utilisent `startDate`, `startTime`, `endDate`, `endTime`.
-
-### Étiquette Personnalisée
+### Étiquette
 ```javascript
-{
-  id: number,
-  name: string,           // Nom de l'étiquette (ex: "Restaurant", "Shopping")
-  color: string           // Couleur hex (ex: "#FF6B6B")
-}
+{ id: number, name: string, color: string }
 ```
 
 ---
@@ -353,82 +117,32 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 |-----|---------|
 | `trelloLists` | JSON des listes |
 | `trelloCards` | JSON des cartes |
-| `trelloCustomLabels` | JSON des étiquettes personnalisées |
+| `trelloCustomLabels` | JSON des étiquettes |
 | `trelloActiveView` | 'board' ou 'map' |
 | `trelloMapView` | `{ lat, lng, zoom }` |
 
 ---
 
-## Images de Couverture
+## Documentation Technique
 
-### Accès
-- **Bouton "Couverture"** : présent dans les modals de création et modification de carte
-- Ouvre une **modal dédiée compacte** pour gérer l'image
-
-### Sources d'images disponibles (dans la modal couverture)
-1. **Recherche par mots-clés** : Collections Unsplash prédéfinies (tour eiffel, paris, london, plage, restaurant, hotel, musée, etc.)
-2. **Import de fichier** : Upload depuis l'appareil (max 5Mo, stocké en Base64)
-3. **Lien externe** : Coller une URL d'image (Google Images, etc.)
-
-### Suppression d'image
-- Via le bouton **"Supprimer l'image de couverture"** dans la modal couverture
-- Option visible uniquement si une image existe
+Pour les détails d'implémentation (modules, exports, dépendances, patterns, points d'attention), voir **[src/CLAUDE.md](src/CLAUDE.md)**.
 
 ---
 
-## Améliorations Possibles (Reste à Faire)
+## Améliorations Possibles
 
 ### UX/UI
-- [ ] Édition des items de checklist (actuellement : ajout/suppression seulement)
-- [ ] Animations de transition (modals, glissement des cartes)
-- [ ] Limiter la longueur des titres et descriptions
-- [ ] Cohérence visuelle labels / marqueurs de carte
+- [ ] Édition des items de checklist
+- [ ] Animations de transition
+- [ ] Cohérence visuelle labels / marqueurs
 
 ### Fonctionnel
-- [ ] Moteur de recherche global (titre, description, labels, adresse)
-- [x] Filtres par étiquettes (logique ET, avec indicateur visuel)
-- [ ] Filtres avancés (par liste, date d'échéance)
+- [x] Filtres par étiquettes
+- [ ] Moteur de recherche global
 - [ ] Export / import JSON
 - [ ] Système d'undo/redo
 
 ### Technique
-- [ ] Gestion des erreurs API Nominatim (quota, réseau)
-- [ ] Backend pour multi-utilisateur / partage
-- [ ] Clustering des marqueurs pour beaucoup de cartes
-- [ ] Compression des images Base64 pour économiser le localStorage
-
----
-
-## Notes pour le Développement
-
-### Ajouter une Nouvelle Fonctionnalité
-1. Identifier les fonctions concernées (voir tableau ci-dessus)
-2. Respecter le pattern de persistance : modifier l'état → `saveData()` → `renderBoard()` et/ou `renderMapMarkers()`
-3. Ajouter une entrée dans `history` si modification traçable
-
-### Conventions
-- Les ID sont des entiers auto-incrémentés
-- Les couleurs des labels sont en format hex majuscule (#FF6B6B)
-- Les timestamps utilisent `toLocaleString('fr-FR')`
-- Les coordonnées utilisent `{ lat, lon }` (attention : lon, pas lng)
-
-### Points d'Attention
-- La mini-carte du modal de détail vérifie `card.coordinates` avant de s'afficher (masquée si pas de coordonnées)
-- La mini-carte nécessite `invalidateSize()` car elle est dans un conteneur caché au départ
-- Le fitBounds se déclenche uniquement quand on passe de 0 à >0 marqueurs, ou explicitement
-- L'auto-complétion a un debounce de 500ms pour limiter les appels API
-- Les images uploadées sont stockées en Base64, attention à la limite de 5Mo du localStorage
-- Variables CSS définies sur `:root` par JavaScript pour la gestion mobile :
-  - `--visual-viewport-height` : hauteur visible du viewport (NE PAS utiliser pour la hauteur du modal !)
-  - `--visual-viewport-offset` : décalage du viewport (iOS Safari)
-  - `--keyboard-height` : hauteur du clavier (pour référence uniquement, NE PAS utiliser dans les marges CSS)
-- Sur mobile, les modals utilisent `.keyboard-open` quand le clavier est détecté (hauteur réduite > 150px)
-- **IMPORTANT iOS Safari** : le modal doit TOUJOURS garder `height: 100vh` même avec le clavier ouvert. Si on utilise `--visual-viewport-height` pour la hauteur, le fond du board apparaît derrière le modal
-- **IMPORTANT marges avec clavier** : utiliser des valeurs fixes (`margin-top: 5px`, `margin-bottom: 20px`) et NON `calc(var(--keyboard-height) + Xpx)` qui crée des décalages de scroll (header coupé en haut, grand espace en bas)
-- Le modal mobile utilise `position: fixed` avec `top/left/right/bottom: 0` + `width: 100vw` pour couvrir tout l'écran
-- **Scroll intelligent sur iOS** : le scroll vers l'input ne se fait que si l'élément n'est pas dans la zone visible (20%-70% de l'écran), permettant à l'utilisateur de voir le haut de la modal (header, image de couverture)
-- **Préservation scroll fermeture clavier** : `handleKeyboardChange()` sauvegarde `scrollTop` avant retrait de `keyboard-open` et le restaure via double `requestAnimationFrame` avec `scroll-behavior: auto` temporaire
-- **MutationObserver** : surveille l'ouverture des modals pour reset le scroll à 0 et recalculer la hauteur initiale du viewport
-- **Fermeture des modals** : `openAddCardModal()` et `openCardDetailModal()` ferment les autres modals avant de s'ouvrir pour éviter les superpositions
-- **Upload d'images iOS** : ne jamais réinitialiser `input.value` avant la fin de `FileReader.readAsDataURL()` car iOS Safari peut invalider la référence au fichier
-- L'état `isImageUploading` doit être vérifié avant toute soumission de formulaire impliquant une image
+- [ ] Gestion erreurs API Nominatim
+- [ ] Clustering des marqueurs
+- [ ] Compression images Base64
