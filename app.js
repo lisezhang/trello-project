@@ -446,6 +446,7 @@ function openAddCardModal() {
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardChecklistContainer').innerHTML = '';
+  document.getElementById('addCardChecklistSection').style.display = 'none';
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
   window.currentAddressCoordinates = null;
 
@@ -468,6 +469,7 @@ function closeAddCardModal() {
   document.getElementById('addressAutocomplete').style.display = 'none';
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
+  document.getElementById('addCardAddMenu').classList.remove('show');
   addCardChecklist = [];
   addCardCoverImage = null;
 }
@@ -676,6 +678,15 @@ function openCardDetailModal(card) {
   document.getElementById('detailLabelSearch').value = '';
 
   renderDetailLabels(card);
+
+  // Show checklist section only if card has checklist items
+  const checklistSection = document.getElementById('detailChecklistSection');
+  if (card.checklist && card.checklist.length > 0) {
+    checklistSection.style.display = 'block';
+  } else {
+    checklistSection.style.display = 'none';
+  }
+
   renderChecklist(card);
   renderHistory(card);
 
@@ -691,6 +702,7 @@ function openCardDetailModal(card) {
 function closeCardDetailModal() {
   document.getElementById('cardDetailModal').classList.remove('show');
   document.getElementById('cardOptionsMenu').classList.remove('show');
+  document.getElementById('detailAddMenu').classList.remove('show');
   currentCardId = null;
 }
 
@@ -710,6 +722,39 @@ function toggleNavbarOptionsMenu() {
 
 function closeNavbarOptionsMenu() {
   document.getElementById('navbarOptionsMenu').classList.remove('show');
+}
+
+// -------------------------
+// Add "+" dropdown menus
+// -------------------------
+function toggleAddCardAddMenu() {
+  const menu = document.getElementById('addCardAddMenu');
+  menu.classList.toggle('show');
+}
+
+function closeAddCardAddMenu() {
+  document.getElementById('addCardAddMenu').classList.remove('show');
+}
+
+function toggleDetailAddMenu() {
+  const menu = document.getElementById('detailAddMenu');
+  menu.classList.toggle('show');
+}
+
+function closeDetailAddMenu() {
+  document.getElementById('detailAddMenu').classList.remove('show');
+}
+
+function showAddCardChecklist() {
+  const section = document.getElementById('addCardChecklistSection');
+  section.style.display = 'block';
+  closeAddCardAddMenu();
+}
+
+function showDetailChecklist() {
+  const section = document.getElementById('detailChecklistSection');
+  section.style.display = 'block';
+  closeDetailAddMenu();
 }
 
 function renderDetailLabels(card) {
@@ -1486,6 +1531,17 @@ window.onmouseup = (event) => {
   const navbarDropdown = document.getElementById('navbarOptionsDropdown');
   if (navbarDropdown && !navbarDropdown.contains(event.target)) {
     closeNavbarOptionsMenu();
+  }
+
+  // Close "+" add menus if clicking outside of them
+  const addCardAddDropdown = document.getElementById('addCardAddDropdown');
+  if (addCardAddDropdown && !addCardAddDropdown.contains(event.target)) {
+    closeAddCardAddMenu();
+  }
+
+  const detailAddDropdown = document.getElementById('detailAddDropdown');
+  if (detailAddDropdown && !detailAddDropdown.contains(event.target)) {
+    closeDetailAddMenu();
   }
 
   // Only close modal if mousedown AND mouseup both happened on the modal backdrop
