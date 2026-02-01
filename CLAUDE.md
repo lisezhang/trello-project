@@ -220,14 +220,18 @@ let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCar
 | `searchDetailAddress(query)` | Auto-complétion modal détail |
 | `openCoverImageModal(mode)` | Ouvre le modal de gestion d'image de couverture |
 | `closeCoverImageModal()` | Ferme le modal de couverture |
-| `searchCoverImages()` | Recherche d'images dans le modal couverture |
-| `selectCoverImageFromModal(url, credit)` | Sélectionne une image depuis le modal couverture |
-| `handleCoverImageUpload(input)` | Gère l'upload de fichier image dans le modal couverture |
+| `searchCoverImages()` | Recherche d'images dans le modal couverture (utilise `displayImageSearchResults`) |
 | `removeCoverImageFromModal()` | Supprime l'image via le modal couverture |
-| `selectCoverImage(url, credit)` | Sélectionne une image (modal détail) |
-| `selectAddCardCoverImage(url, credit)` | Sélectionne une image (modal ajout) |
+| `displayImageSearchResults(query, container, mode)` | Affiche les résultats de recherche (modes: detail, addCard, cover-detail, cover-addCard) |
+| `displayLocalResults(images, query, container, mode)` | Affiche les images et gère la sélection (ferme modal couverture si mode cover-*) |
+| `selectCoverImage(url, credit)` | Sélectionne une image (carte existante) |
+| `selectAddCardCoverImage(url, credit)` | Sélectionne une image (nouvelle carte) |
 | `removeCoverImage()` | Supprime l'image de couverture (carte existante) |
 | `removeAddCardCoverImage()` | Supprime l'image de couverture (nouvelle carte) |
+| `toggleUrlInput(mode)` | Affiche/masque le champ URL (modes: detail, addCard, cover) |
+| `applyImageUrl(mode)` | Applique une image depuis URL (modes: detail, addCard, cover) |
+| `handleImageUpload(input, mode)` | Gère l'upload de fichier image (modes: detail, addCard, cover) |
+| `showImageUploadLoading(mode, show)` | Affiche/masque l'indicateur de chargement (modes: detail, addCard, cover) |
 | `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
 | `renderAddCardLabelSelector()` | Affiche le sélecteur d'étiquettes (modal ajout) |
 | `renderDetailLabelSelector()` | Affiche le sélecteur d'étiquettes (modal détail) |

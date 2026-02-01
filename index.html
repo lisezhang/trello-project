@@ -434,14 +434,14 @@
           <button type="button" class="btn btn-secondary image-alt-btn" onclick="document.getElementById('coverImageFileInput').click()">
             <i class="fas fa-upload"></i> Importer une image
           </button>
-          <button type="button" class="btn btn-secondary image-alt-btn" onclick="toggleCoverUrlInput()">
+          <button type="button" class="btn btn-secondary image-alt-btn" onclick="toggleUrlInput('cover')">
             <i class="fas fa-link"></i> Coller un lien
           </button>
         </div>
-        <input type="file" id="coverImageFileInput" accept="image/*" style="display:none;" onchange="handleCoverImageUpload(this)">
+        <input type="file" id="coverImageFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'cover')">
         <div id="coverUrlInputContainer" class="image-url-input-container" style="display:none;">
           <input type="text" class="card-detail-input" id="coverImageUrlInput" placeholder="Collez l'URL de l'image ici...">
-          <button class="btn btn-primary" onclick="applyCoverImageUrl()">Appliquer</button>
+          <button class="btn btn-primary" onclick="applyImageUrl('cover')">Appliquer</button>
         </div>
       </div>
 
