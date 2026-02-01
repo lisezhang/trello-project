@@ -42,10 +42,7 @@ trello-project/
 
 ### 3. Modal de Détail
 - **Image de couverture** : affichée en haut du modal
-- **Recherche d'image** : champ de recherche par mots-clés (monuments, lieux, restaurants...)
-- **Import d'image** : upload depuis l'ordinateur/téléphone (stockage Base64, max 5Mo)
-- **Lien externe** : coller une URL d'image depuis Google Images ou autre
-- **Suppression de l'image** : via le menu "..." (options de la carte)
+- **Bouton "Couverture"** : ouvre une modal dédiée pour gérer l'image de couverture
 - **Titre** : édition inline + historisation
 - **Description** : édition textarea + sauvegarde blur/Enter
 - **Étiquettes** : sélecteur multi-couleurs
@@ -53,13 +50,20 @@ trello-project/
 - **Adresse** : édition + auto-complétion Nominatim + mise à jour des coordonnées
 
 ### 4. Modal d'Ajout de Carte
-- Mêmes fonctionnalités d'image que le modal de détail :
-  - Recherche par mots-clés
-  - Import depuis fichier
-  - Coller un lien externe
+- **Image de couverture** : affichée en haut du modal si sélectionnée
+- **Bouton "Couverture"** : ouvre une modal dédiée pour gérer l'image de couverture
 - Mini-carte affichée après sélection d'une adresse avec **popup cliquable** (identique au modal de détail) :
   - Affiche le titre de la carte (ou "Nouvelle carte" si non rempli)
   - Adresse cliquable pour ouvrir Google Maps ou Apple Plans
+
+### 4b. Modal de Couverture (Image)
+- **Accès** : bouton "Couverture" dans les modals de création et modification de carte
+- **Modal compacte/overlay** : design léger, centré sur l'écran
+- **Recherche d'images** : champ de recherche par mots-clés (monuments, lieux, restaurants...)
+- **Import de fichier** : upload depuis l'ordinateur/téléphone (stockage Base64, max 5Mo)
+- **Coller un lien** : URL d'image depuis Google Images ou autre
+- **Supprimer l'image** : bouton visible uniquement si une image existe
+- **Fermeture automatique** : la modal se ferme après sélection/suppression d'une image
 
 ### 5. Auto-complétion d'Adresses
 - Debounce 500ms sur la saisie
@@ -191,6 +195,7 @@ let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 let isImageUploading = false; // État de chargement d'image (bloque la soumission)
 let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, address)
 let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET, non persisté)
+let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCard')
 ```
 
 ### Fonctions Clés
@@ -209,14 +214,16 @@ let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET
 | `renderDetailMiniMarkers(focusedCardId)` | Gère les marqueurs de la mini-carte |
 | `searchAddress(query)` | Auto-complétion modal ajout |
 | `searchDetailAddress(query)` | Auto-complétion modal détail |
-| `searchImages()` | Recherche d'images (modal détail) |
-| `searchAddCardImages()` | Recherche d'images (modal ajout) |
+| `openCoverImageModal(mode)` | Ouvre le modal de gestion d'image de couverture |
+| `closeCoverImageModal()` | Ferme le modal de couverture |
+| `searchCoverImages()` | Recherche d'images dans le modal couverture |
+| `selectCoverImageFromModal(url, credit)` | Sélectionne une image depuis le modal couverture |
+| `handleCoverImageUpload(input)` | Gère l'upload de fichier image dans le modal couverture |
+| `removeCoverImageFromModal()` | Supprime l'image via le modal couverture |
 | `selectCoverImage(url, credit)` | Sélectionne une image (modal détail) |
 | `selectAddCardCoverImage(url, credit)` | Sélectionne une image (modal ajout) |
-| `removeCoverImage()` | Supprime l'image de couverture |
-| `handleImageUpload(input, mode)` | Gère l'upload de fichier image (avec support iOS) |
-| `showImageUploadLoading(mode, show)` | Affiche/masque l'indicateur de chargement d'image |
-| `applyImageUrl(mode)` | Applique une image depuis URL |
+| `removeCoverImage()` | Supprime l'image de couverture (carte existante) |
+| `removeAddCardCoverImage()` | Supprime l'image de couverture (nouvelle carte) |
 | `initMobileKeyboardHandler()` | Gère l'affichage des modals avec clavier mobile |
 | `renderAddCardLabelSelector()` | Affiche le sélecteur d'étiquettes (modal ajout) |
 | `renderDetailLabelSelector()` | Affiche le sélecteur d'étiquettes (modal détail) |
@@ -302,14 +309,18 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 
 ## Images de Couverture
 
-### Sources d'images disponibles
+### Accès
+- **Bouton "Couverture"** : présent dans les modals de création et modification de carte
+- Ouvre une **modal dédiée compacte** pour gérer l'image
+
+### Sources d'images disponibles (dans la modal couverture)
 1. **Recherche par mots-clés** : Collections Unsplash prédéfinies (tour eiffel, paris, london, plage, restaurant, hotel, musée, etc.)
 2. **Import de fichier** : Upload depuis l'appareil (max 5Mo, stocké en Base64)
 3. **Lien externe** : Coller une URL d'image (Google Images, etc.)
 
 ### Suppression d'image
-- Via le menu "..." (trois points) dans le modal de détail
-- Option "Supprimer l'image de couverture" visible uniquement si une image existe
+- Via le bouton **"Supprimer l'image de couverture"** dans la modal couverture
+- Option visible uniquement si une image existe
 
 ---
 

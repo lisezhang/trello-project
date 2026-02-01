@@ -127,36 +127,11 @@
         <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
       </div>
 
-      <!-- Image Search Section for Add Card -->
+      <!-- Cover Image Button -->
       <div class="card-detail-section">
-        <div class="card-detail-field">
-          <label><i class="fas fa-image"></i> Image de couverture</label>
-          <div class="image-search-container">
-            <input type="text" class="card-detail-input" id="addCardImageSearchInput" placeholder="Rechercher une image (ex: Tour Eiffel, restaurant, plage...)" autocomplete="off">
-            <button class="btn btn-primary image-search-btn" onclick="searchAddCardImages()">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-          <div id="addCardImageSearchResults" class="image-search-results" style="display:none;"></div>
-
-          <!-- Alternative image options -->
-          <div class="image-alternative-options">
-            <div class="image-alt-divider"><span>ou</span></div>
-            <div class="image-alt-buttons">
-              <button type="button" class="btn btn-secondary image-alt-btn" onclick="document.getElementById('addCardImageFileInput').click()">
-                <i class="fas fa-upload"></i> Importer une image
-              </button>
-              <button type="button" class="btn btn-secondary image-alt-btn" onclick="toggleUrlInput('addCard')">
-                <i class="fas fa-link"></i> Coller un lien
-              </button>
-            </div>
-            <input type="file" id="addCardImageFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'addCard')">
-            <div id="addCardUrlInputContainer" class="image-url-input-container" style="display:none;">
-              <input type="text" class="card-detail-input" id="addCardImageUrlInput" placeholder="Collez l'URL de l'image ici...">
-              <button class="btn btn-primary" onclick="applyImageUrl('addCard')">Appliquer</button>
-            </div>
-          </div>
-        </div>
+        <button type="button" class="cover-image-btn" onclick="openCoverImageModal('addCard')">
+          <i class="fas fa-image"></i> Couverture
+        </button>
       </div>
 
       <div class="card-detail-section">
@@ -239,9 +214,6 @@
               <div class="dropdown-item" onclick="openLabelsManagementModal()">
                 <i class="fas fa-tags"></i> Gérer les étiquettes
               </div>
-              <div class="dropdown-item" id="removeCoverImageOption" onclick="removeCoverImage(); closeCardOptionsMenu();" style="display:none;">
-                <i class="fas fa-image"></i> Supprimer l'image de couverture
-              </div>
               <div class="dropdown-item dropdown-item-danger" onclick="deleteCard()">
                 <i class="fas fa-trash"></i> Supprimer la carte
               </div>
@@ -251,36 +223,11 @@
         </div>
       </div>
 
-      <!-- Image Search Section -->
+      <!-- Cover Image Button -->
       <div class="card-detail-section">
-        <div class="card-detail-field">
-          <label><i class="fas fa-image"></i> Image de couverture</label>
-          <div class="image-search-container">
-            <input type="text" class="card-detail-input" id="imageSearchInput" placeholder="Rechercher une image (ex: Tour Eiffel, restaurant, plage...)" autocomplete="off">
-            <button class="btn btn-primary image-search-btn" onclick="searchImages()">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-          <div id="imageSearchResults" class="image-search-results" style="display:none;"></div>
-
-          <!-- Alternative image options -->
-          <div class="image-alternative-options">
-            <div class="image-alt-divider"><span>ou</span></div>
-            <div class="image-alt-buttons">
-              <button type="button" class="btn btn-secondary image-alt-btn" onclick="document.getElementById('detailImageFileInput').click()">
-                <i class="fas fa-upload"></i> Importer une image
-              </button>
-              <button type="button" class="btn btn-secondary image-alt-btn" onclick="toggleUrlInput('detail')">
-                <i class="fas fa-link"></i> Coller un lien
-              </button>
-            </div>
-            <input type="file" id="detailImageFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'detail')">
-            <div id="detailUrlInputContainer" class="image-url-input-container" style="display:none;">
-              <input type="text" class="card-detail-input" id="detailImageUrlInput" placeholder="Collez l'URL de l'image ici...">
-              <button class="btn btn-primary" onclick="applyImageUrl('detail')">Appliquer</button>
-            </div>
-          </div>
-        </div>
+        <button type="button" class="cover-image-btn" onclick="openCoverImageModal('detail')">
+          <i class="fas fa-image"></i> Couverture
+        </button>
       </div>
 
       <div class="card-detail-section">
@@ -412,6 +359,54 @@
         <button class="maps-choice-btn apple-maps" onclick="openInAppleMaps()">
           <i class="fab fa-apple"></i>
           <span>Apple Plans</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cover Image Modal -->
+  <div class="modal" id="coverImageModal">
+    <div class="modal-content cover-modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-image"></i> Image de couverture</h2>
+        <button class="close-modal" onclick="closeCoverImageModal()">&times;</button>
+      </div>
+
+      <!-- Image Search Section -->
+      <div class="cover-modal-section">
+        <label><i class="fas fa-search"></i> Rechercher une image</label>
+        <div class="image-search-container">
+          <input type="text" class="card-detail-input" id="coverImageSearchInput" placeholder="Ex: Tour Eiffel, restaurant, plage..." autocomplete="off">
+          <button class="btn btn-primary image-search-btn" onclick="searchCoverImages()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        <div id="coverImageSearchResults" class="image-search-results" style="display:none;"></div>
+      </div>
+
+      <!-- Alternative image options -->
+      <div class="cover-modal-section">
+        <div class="image-alt-divider"><span>ou</span></div>
+        <div class="image-alt-buttons">
+          <button type="button" class="btn btn-secondary image-alt-btn" onclick="document.getElementById('coverImageFileInput').click()">
+            <i class="fas fa-upload"></i> Importer une image
+          </button>
+          <button type="button" class="btn btn-secondary image-alt-btn" onclick="toggleCoverUrlInput()">
+            <i class="fas fa-link"></i> Coller un lien
+          </button>
+        </div>
+        <input type="file" id="coverImageFileInput" accept="image/*" style="display:none;" onchange="handleCoverImageUpload(this)">
+        <div id="coverUrlInputContainer" class="image-url-input-container" style="display:none;">
+          <input type="text" class="card-detail-input" id="coverImageUrlInput" placeholder="Collez l'URL de l'image ici...">
+          <button class="btn btn-primary" onclick="applyCoverImageUrl()">Appliquer</button>
+        </div>
+      </div>
+
+      <!-- Remove image option (only visible if image exists) -->
+      <div class="cover-modal-section" id="coverRemoveSection" style="display:none;">
+        <div class="image-alt-divider"><span>ou</span></div>
+        <button type="button" class="btn btn-danger cover-remove-btn" onclick="removeCoverImageFromModal()">
+          <i class="fas fa-trash"></i> Supprimer l'image de couverture
         </button>
       </div>
     </div>
