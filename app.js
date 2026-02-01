@@ -2738,6 +2738,290 @@ window.addEventListener('mouseup', (event) => {
 });
 
 // -------------------------
+// Cover Image Modal
+// -------------------------
+let coverImageMode = null; // 'detail' or 'addCard'
+
+function openCoverImageModal(mode) {
+  coverImageMode = mode;
+
+  const modal = document.getElementById('coverImageModal');
+  const removeSection = document.getElementById('coverRemoveSection');
+
+  // Reset state
+  document.getElementById('coverImageSearchInput').value = '';
+  document.getElementById('coverImageSearchResults').style.display = 'none';
+  document.getElementById('coverUrlInputContainer').style.display = 'none';
+  document.getElementById('coverImageUrlInput').value = '';
+
+  // Show/hide remove button based on whether an image exists
+  let hasImage = false;
+  if (mode === 'detail') {
+    const card = cards.find(c => c.id === currentCardId);
+    hasImage = card && card.coverImage;
+  } else if (mode === 'addCard') {
+    hasImage = addCardCoverImage && addCardCoverImage.url;
+  }
+
+  removeSection.style.display = hasImage ? 'block' : 'none';
+
+  modal.classList.add('show');
+}
+
+function closeCoverImageModal() {
+  document.getElementById('coverImageModal').classList.remove('show');
+  coverImageMode = null;
+}
+
+// Search images for cover modal
+function searchCoverImages() {
+  const query = document.getElementById('coverImageSearchInput').value.trim();
+  if (!query) return;
+
+  const resultsContainer = document.getElementById('coverImageSearchResults');
+  displayCoverImageSearchResults(query, resultsContainer);
+}
+
+function displayCoverImageSearchResults(query, container) {
+  container.style.display = 'grid';
+  container.innerHTML = '<div class="image-search-loading"><i class="fas fa-spinner fa-spin"></i> Recherche en cours...</div>';
+
+  // Small delay to show loading state
+  setTimeout(() => {
+    const queryLower = query.toLowerCase().trim();
+    let images = [];
+
+    // Try to find matching collection
+    for (const [key, urls] of Object.entries(IMAGE_COLLECTIONS)) {
+      if (queryLower.includes(key) || key.includes(queryLower)) {
+        images = [...urls];
+        break;
+      }
+    }
+
+    // If no match found, use default collection
+    if (images.length === 0) {
+      images = [...IMAGE_COLLECTIONS['default']];
+    }
+
+    // Shuffle and take up to 9 images
+    images = shuffleArray(images).slice(0, 9);
+
+    // Add more variety by appending random params
+    images = images.map((url, i) => `${url}&sig=${Date.now()}-${i}`);
+
+    // Display results
+    container.innerHTML = '';
+
+    if (images.length === 0) {
+      container.innerHTML = '<div class="image-search-empty">Aucune image trouvée. Essayez d\'autres mots-clés.</div>';
+      return;
+    }
+
+    images.forEach((imageUrl) => {
+      const item = document.createElement('div');
+      item.className = 'image-search-item';
+      item.innerHTML = `
+        <img src="${imageUrl}" alt="${query}" onerror="this.parentElement.style.display='none'">
+        <div class="image-credit">Unsplash</div>
+      `;
+      item.onclick = () => {
+        // Use larger version for the cover
+        const largeUrl = imageUrl.replace('w=800', 'w=1200');
+        selectCoverImageFromModal(largeUrl, 'Unsplash');
+      };
+      container.appendChild(item);
+    });
+  }, 300);
+}
+
+// Select cover image from the cover modal
+function selectCoverImageFromModal(imageUrl, photographer) {
+  if (coverImageMode === 'detail') {
+    selectCoverImage(imageUrl, photographer);
+  } else if (coverImageMode === 'addCard') {
+    selectAddCardCoverImage(imageUrl, photographer);
+  }
+  closeCoverImageModal();
+}
+
+// Toggle URL input visibility in cover modal
+function toggleCoverUrlInput() {
+  const container = document.getElementById('coverUrlInputContainer');
+
+  if (container.style.display === 'none' || container.style.display === '') {
+    container.style.display = 'flex';
+    container.querySelector('input').focus();
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+// Apply image from URL in cover modal
+function applyCoverImageUrl() {
+  const url = document.getElementById('coverImageUrlInput').value.trim();
+
+  if (!url) {
+    alert('Veuillez entrer une URL d\'image valide');
+    return;
+  }
+
+  selectCoverImageFromModal(url, 'Lien externe');
+  document.getElementById('coverUrlInputContainer').style.display = 'none';
+  document.getElementById('coverImageUrlInput').value = '';
+}
+
+// Handle image file upload from cover modal
+function handleCoverImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Validate file type - improved for mobile/HEIC support
+  const validImageTypes = ['image/', 'application/octet-stream'];
+  const fileExtension = file.name ? file.name.split('.').pop().toLowerCase() : '';
+  const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tiff', 'tif'];
+
+  const isValidType = !file.type ||
+                      validImageTypes.some(type => file.type.startsWith(type)) ||
+                      file.type.includes('heic') ||
+                      file.type.includes('heif');
+  const isValidExtension = validExtensions.includes(fileExtension);
+
+  if (!isValidType && !isValidExtension) {
+    alert('Veuillez sélectionner un fichier image valide');
+    input.value = '';
+    return;
+  }
+
+  // Validate file size (max 5MB for localStorage)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    alert('L\'image est trop grande. Taille maximum : 5 Mo');
+    input.value = '';
+    return;
+  }
+
+  // Show loading state
+  isImageUploading = true;
+  showCoverImageUploadLoading(true);
+
+  const reader = new FileReader();
+
+  // Timeout for stuck reads
+  const readTimeout = setTimeout(() => {
+    if (isImageUploading) {
+      isImageUploading = false;
+      showCoverImageUploadLoading(false);
+      alert('Le chargement de l\'image a pris trop de temps. Veuillez réessayer.');
+      input.value = '';
+    }
+  }, 30000);
+
+  reader.onload = function(e) {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showCoverImageUploadLoading(false);
+
+    const base64Data = e.target.result;
+    selectCoverImageFromModal(base64Data, 'Image importée');
+    input.value = '';
+  };
+
+  reader.onerror = function(e) {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showCoverImageUploadLoading(false);
+    console.error('FileReader error:', e);
+    alert('Erreur lors de la lecture du fichier. Veuillez réessayer.');
+    input.value = '';
+  };
+
+  reader.onabort = function() {
+    clearTimeout(readTimeout);
+    isImageUploading = false;
+    showCoverImageUploadLoading(false);
+    input.value = '';
+  };
+
+  reader.readAsDataURL(file);
+}
+
+// Show/hide loading indicator for image upload in cover modal
+function showCoverImageUploadLoading(show) {
+  const container = document.querySelector('#coverImageModal .image-alt-buttons');
+  if (!container) return;
+
+  // Remove existing loading indicator
+  const existingLoading = container.querySelector('.image-upload-loading');
+  if (existingLoading) {
+    existingLoading.remove();
+  }
+
+  if (show) {
+    // Add loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'image-upload-loading';
+    loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement de l\'image...';
+    container.appendChild(loadingDiv);
+
+    // Disable buttons
+    container.querySelectorAll('button').forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    });
+  } else {
+    // Re-enable buttons
+    container.querySelectorAll('button').forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
+  }
+}
+
+// Remove cover image from modal
+function removeCoverImageFromModal() {
+  if (coverImageMode === 'detail') {
+    removeCoverImage();
+  } else if (coverImageMode === 'addCard') {
+    removeAddCardCoverImage();
+  }
+  closeCoverImageModal();
+}
+
+// Add Enter key support for cover image search and URL input
+document.addEventListener('DOMContentLoaded', () => {
+  // Cover modal image search
+  const coverImageSearchInput = document.getElementById('coverImageSearchInput');
+  if (coverImageSearchInput) {
+    coverImageSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchCoverImages();
+      }
+    });
+  }
+
+  // Cover modal URL input
+  const coverImageUrlInput = document.getElementById('coverImageUrlInput');
+  if (coverImageUrlInput) {
+    coverImageUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyCoverImageUrl();
+      }
+    });
+  }
+});
+
+// Handle click outside cover image modal
+window.addEventListener('mouseup', (event) => {
+  const coverImageModal = document.getElementById('coverImageModal');
+  if (event.target === coverImageModal) {
+    closeCoverImageModal();
+  }
+});
+
+// -------------------------
 // Boot
 // -------------------------
 window.onload = init;
