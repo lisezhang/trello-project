@@ -49,7 +49,8 @@ trello-project/
 - **Titre** : édition inline + historisation
 - **Description** : édition textarea + sauvegarde blur/Enter
 - **Étiquettes** : sélecteur multi-couleurs
-- **Date d'échéance** : champ date éditable
+- **Date de début** : champ date avec option d'ajouter l'heure (heures:minutes:secondes)
+- **Date de fin** : champ date avec option d'ajouter l'heure (heures:minutes:secondes)
 - **Adresse** : édition + auto-complétion Nominatim + mise à jour des coordonnées
 
 ### 4. Modal d'Ajout de Carte
@@ -199,6 +200,9 @@ let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET
 |----------|-------------|
 | `init()` | Point d'entrée, charge données, initialise carte |
 | `loadData()` / `saveData()` | Gestion localStorage |
+| `toggleTimeInput(inputPrefix, show)` | Affiche/masque le champ d'heure |
+| `formatDateDisplay(date, time)` | Formate une date/heure pour affichage (dd/mm/yyyy à HH:MM:SS) |
+| `formatDateRangeDisplay(startDate, startTime, endDate, endTime)` | Formate une plage de dates pour affichage |
 | `renderBoard()` | Reconstruit le DOM du Kanban |
 | `createListElement(list)` | Crée le DOM d'une liste |
 | `createCardElement(card)` | Crée le DOM d'une carte |
@@ -268,7 +272,10 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
   labels: number[],        // IDs des étiquettes personnalisées
   address: string,
   coordinates: { lat: number, lon: number } | null,
-  dueDate: string,
+  startDate: string | null,        // Date de début (format YYYY-MM-DD)
+  startTime: string | null,        // Heure de début (format HH:MM:SS, optionnel)
+  endDate: string | null,          // Date de fin (format YYYY-MM-DD)
+  endTime: string | null,          // Heure de fin (format HH:MM:SS, optionnel)
   coverImage: string | null,       // URL ou Base64 de l'image
   coverImageCredit: string | null, // Source (Unsplash, Lien externe, Image importée)
   checklist: [{ text: string, completed: boolean }],
@@ -276,6 +283,9 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
   createdAt: string
 }
 ```
+
+> **Note de migration** : L'ancien champ `dueDate` est toujours supporté pour la rétrocompatibilité.
+> Les nouvelles cartes utilisent `startDate`, `startTime`, `endDate`, `endTime`.
 
 ### Étiquette Personnalisée
 ```javascript
