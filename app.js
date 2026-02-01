@@ -427,6 +427,7 @@ function openAddCardModal() {
 
   selectedLabels = [];
   addCardChecklist = [];
+  addCardLinks = [];
   addCardCoverImage = null;
   document.getElementById('cardModalTitle').textContent = 'Ajouter une carte';
   document.getElementById('cardTitleInput').value = '';
@@ -447,6 +448,8 @@ function openAddCardModal() {
   document.getElementById('addCardMiniMapContainer').style.display = 'none';
   document.getElementById('addCardChecklistContainer').innerHTML = '';
   document.getElementById('addCardChecklistSection').style.display = 'none';
+  document.getElementById('addCardLinksContainer').innerHTML = '';
+  document.getElementById('addCardLinksSection').style.display = 'none';
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
   window.currentAddressCoordinates = null;
 
@@ -471,6 +474,7 @@ function closeAddCardModal() {
   document.getElementById('addCardCoverImageContainer').style.display = 'none';
   document.getElementById('addCardAddMenu').classList.remove('show');
   addCardChecklist = [];
+  addCardLinks = [];
   addCardCoverImage = null;
 }
 
@@ -575,6 +579,7 @@ function saveNewCard() {
     coverImage: addCardCoverImage ? addCardCoverImage.url : null,
     coverImageCredit: addCardCoverImage ? addCardCoverImage.credit : null,
     checklist: [...addCardChecklist],
+    links: [...addCardLinks],
     history: [{ action: 'Carte créée', timestamp: new Date().toLocaleString('fr-FR') }],
     createdAt: new Date().toLocaleString('fr-FR')
   };
@@ -582,6 +587,7 @@ function saveNewCard() {
   cards.push(newCard);
   window.currentAddressCoordinates = null;
   addCardChecklist = [];
+  addCardLinks = [];
   addCardCoverImage = null;
 
   saveData();
@@ -688,6 +694,7 @@ function openCardDetailModal(card) {
   }
 
   renderChecklist(card);
+  renderDetailLinks(card);
   renderHistory(card);
 
   const modal = document.getElementById('cardDetailModal');
@@ -2889,6 +2896,301 @@ window.addEventListener('mouseup', (event) => {
   const coverImageModal = document.getElementById('coverImageModal');
   if (event.target === coverImageModal) {
     closeCoverImageModal();
+  }
+});
+
+// -------------------------
+// Links Management
+// -------------------------
+let addCardLinks = []; // Temporary links for new card
+let linkModalMode = null; // 'addCard' or 'detail'
+let editingLinkIndex = null; // Index of link being edited (null for new link)
+
+// URL Validation
+function isValidUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+// Show links section for add card modal
+function showAddCardLinks() {
+  const section = document.getElementById('addCardLinksSection');
+  section.style.display = 'block';
+  closeAddCardAddMenu();
+}
+
+// Show links section for detail modal
+function showDetailLinks() {
+  const section = document.getElementById('detailLinksSection');
+  section.style.display = 'block';
+  closeDetailAddMenu();
+}
+
+// Open link form for add card modal
+function openAddCardLinkForm() {
+  linkModalMode = 'addCard';
+  editingLinkIndex = null;
+  openLinkModal();
+}
+
+// Open link form for detail modal
+function openDetailLinkForm() {
+  linkModalMode = 'detail';
+  editingLinkIndex = null;
+  openLinkModal();
+}
+
+// Open link modal
+function openLinkModal() {
+  const modal = document.getElementById('linkModal');
+  const titleInput = document.getElementById('linkTitleInput');
+  const urlInput = document.getElementById('linkUrlInput');
+  const errorDiv = document.getElementById('linkUrlError');
+  const modalTitle = document.getElementById('linkModalTitle');
+  const saveBtn = document.getElementById('saveLinkBtn');
+
+  // Reset form
+  titleInput.value = '';
+  urlInput.value = '';
+  errorDiv.style.display = 'none';
+
+  if (editingLinkIndex !== null) {
+    // Editing existing link
+    modalTitle.innerHTML = '<i class="fas fa-link"></i> Modifier le lien';
+    saveBtn.textContent = 'Modifier';
+
+    let link = null;
+    if (linkModalMode === 'addCard') {
+      link = addCardLinks[editingLinkIndex];
+    } else if (linkModalMode === 'detail') {
+      const card = cards.find(c => c.id === currentCardId);
+      if (card && card.links) {
+        link = card.links[editingLinkIndex];
+      }
+    }
+
+    if (link) {
+      titleInput.value = link.title || '';
+      urlInput.value = link.url || '';
+    }
+  } else {
+    // Adding new link
+    modalTitle.innerHTML = '<i class="fas fa-link"></i> Ajouter un lien';
+    saveBtn.textContent = 'Ajouter';
+  }
+
+  modal.classList.add('show');
+  titleInput.focus();
+}
+
+// Close link modal
+function closeLinkModal() {
+  document.getElementById('linkModal').classList.remove('show');
+  linkModalMode = null;
+  editingLinkIndex = null;
+}
+
+// Save link
+function saveLink() {
+  const titleInput = document.getElementById('linkTitleInput');
+  const urlInput = document.getElementById('linkUrlInput');
+  const errorDiv = document.getElementById('linkUrlError');
+
+  const title = titleInput.value.trim();
+  let url = urlInput.value.trim();
+
+  // Validate URL
+  if (!url) {
+    errorDiv.style.display = 'flex';
+    urlInput.focus();
+    return;
+  }
+
+  // Auto-add https:// if no protocol specified
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+
+  if (!isValidUrl(url)) {
+    errorDiv.style.display = 'flex';
+    urlInput.focus();
+    return;
+  }
+
+  errorDiv.style.display = 'none';
+
+  // Use URL as title if no title provided
+  const finalTitle = title || url;
+
+  const linkData = {
+    title: finalTitle,
+    url: url
+  };
+
+  if (linkModalMode === 'addCard') {
+    if (editingLinkIndex !== null) {
+      // Update existing link
+      addCardLinks[editingLinkIndex] = linkData;
+    } else {
+      // Add new link
+      addCardLinks.push(linkData);
+    }
+    renderAddCardLinks();
+  } else if (linkModalMode === 'detail') {
+    const card = cards.find(c => c.id === currentCardId);
+    if (!card) return;
+
+    card.links = card.links || [];
+
+    if (editingLinkIndex !== null) {
+      // Update existing link
+      card.links[editingLinkIndex] = linkData;
+      card.history.push({
+        action: `Lien modifié: "${finalTitle}"`,
+        timestamp: new Date().toLocaleString('fr-FR')
+      });
+    } else {
+      // Add new link
+      card.links.push(linkData);
+      card.history.push({
+        action: `Lien ajouté: "${finalTitle}"`,
+        timestamp: new Date().toLocaleString('fr-FR')
+      });
+    }
+
+    saveData();
+    renderDetailLinks(card);
+    renderHistory(card);
+  }
+
+  closeLinkModal();
+}
+
+// Render links for add card modal
+function renderAddCardLinks() {
+  const container = document.getElementById('addCardLinksContainer');
+  container.innerHTML = '';
+
+  addCardLinks.forEach((link, index) => {
+    const linkItem = createLinkElement(link, index, 'addCard');
+    container.appendChild(linkItem);
+  });
+}
+
+// Render links for detail modal
+function renderDetailLinks(card) {
+  const container = document.getElementById('detailLinksContainer');
+  const section = document.getElementById('detailLinksSection');
+  container.innerHTML = '';
+
+  if (!card.links || card.links.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+
+  card.links.forEach((link, index) => {
+    const linkItem = createLinkElement(link, index, 'detail');
+    container.appendChild(linkItem);
+  });
+}
+
+// Create link DOM element
+function createLinkElement(link, index, mode) {
+  const linkItem = document.createElement('div');
+  linkItem.className = 'link-item';
+
+  linkItem.innerHTML = `
+    <div class="link-item-icon">
+      <i class="fas fa-link"></i>
+    </div>
+    <div class="link-item-content">
+      <div class="link-item-title">${escapeHtml(link.title)}</div>
+      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="link-item-url" onclick="event.stopPropagation();">
+        ${escapeHtml(link.url)}
+      </a>
+    </div>
+    <div class="link-item-actions">
+      <button class="link-item-action-btn edit" onclick="editLink(${index}, '${mode}')" title="Modifier">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="link-item-action-btn delete" onclick="deleteLink(${index}, '${mode}')" title="Supprimer">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  `;
+
+  return linkItem;
+}
+
+// Edit link
+function editLink(index, mode) {
+  linkModalMode = mode;
+  editingLinkIndex = index;
+  openLinkModal();
+}
+
+// Delete link
+function deleteLink(index, mode) {
+  if (mode === 'addCard') {
+    addCardLinks.splice(index, 1);
+    renderAddCardLinks();
+  } else if (mode === 'detail') {
+    const card = cards.find(c => c.id === currentCardId);
+    if (!card || !card.links) return;
+
+    const deletedLink = card.links[index];
+    card.links.splice(index, 1);
+    card.history.push({
+      action: `Lien supprimé: "${deletedLink.title}"`,
+      timestamp: new Date().toLocaleString('fr-FR')
+    });
+
+    saveData();
+    renderDetailLinks(card);
+    renderHistory(card);
+  }
+}
+
+// Handle Enter key in link modal
+document.addEventListener('DOMContentLoaded', () => {
+  const linkTitleInput = document.getElementById('linkTitleInput');
+  const linkUrlInput = document.getElementById('linkUrlInput');
+
+  if (linkTitleInput) {
+    linkTitleInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        linkUrlInput.focus();
+      }
+    });
+  }
+
+  if (linkUrlInput) {
+    linkUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveLink();
+      }
+    });
+
+    // Hide error on input
+    linkUrlInput.addEventListener('input', () => {
+      document.getElementById('linkUrlError').style.display = 'none';
+    });
+  }
+});
+
+// Handle click outside link modal
+window.addEventListener('mouseup', (event) => {
+  const linkModal = document.getElementById('linkModal');
+  if (event.target === linkModal) {
+    closeLinkModal();
   }
 });
 

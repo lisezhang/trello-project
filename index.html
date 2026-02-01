@@ -133,6 +133,9 @@
               <div class="dropdown-item" onclick="showAddCardChecklist()">
                 <i class="fas fa-tasks"></i> Ajouter une checklist
               </div>
+              <div class="dropdown-item" onclick="showAddCardLinks()">
+                <i class="fas fa-link"></i> Ajouter un lien
+              </div>
             </div>
           </div>
           <button class="close-modal" onclick="closeAddCardModal()">&times;</button>
@@ -222,6 +225,12 @@
         <div class="add-checklist-item" onclick="addCardChecklistItem()">+ Ajouter un item</div>
       </div>
 
+      <div class="card-detail-section" id="addCardLinksSection" style="display:none;">
+        <label style="font-weight:700;color:#333;font-size:14px;">Liens</label>
+        <div class="links-section" id="addCardLinksContainer"></div>
+        <div class="add-link-item" onclick="openAddCardLinkForm()">+ Ajouter un lien</div>
+      </div>
+
       <div class="modal-buttons">
         <button class="btn-save" onclick="saveNewCard()">Créer la carte</button>
       </div>
@@ -246,6 +255,9 @@
             <div class="dropdown-menu" id="detailAddMenu">
               <div class="dropdown-item" onclick="showDetailChecklist()">
                 <i class="fas fa-tasks"></i> Ajouter une checklist
+              </div>
+              <div class="dropdown-item" onclick="showDetailLinks()">
+                <i class="fas fa-link"></i> Ajouter un lien
               </div>
             </div>
           </div>
@@ -360,6 +372,12 @@
         <label style="font-weight:700;color:#333;font-size:14px;">Checklist</label>
         <div class="checklist-section" id="checklistContainer"></div>
         <div class="add-checklist-item" onclick="addChecklistItem()">+ Ajouter un item</div>
+      </div>
+
+      <div class="card-detail-section" id="detailLinksSection" style="display:none;">
+        <label style="font-weight:700;color:#333;font-size:14px;">Liens</label>
+        <div class="links-section" id="detailLinksContainer"></div>
+        <div class="add-link-item" onclick="openDetailLinkForm()">+ Ajouter un lien</div>
       </div>
 
       <div class="card-detail-section">
@@ -506,6 +524,34 @@
 
       <div class="modal-buttons">
         <button class="btn-save" onclick="closeLabelFilterModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link Modal -->
+  <div class="modal" id="linkModal">
+    <div class="modal-content link-modal-content">
+      <div class="modal-header">
+        <h2 id="linkModalTitle"><i class="fas fa-link"></i> Ajouter un lien</h2>
+        <button class="close-modal" onclick="closeLinkModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label for="linkTitleInput">Titre du lien</label>
+        <input type="text" id="linkTitleInput" placeholder="Ex: Documentation, Site officiel...">
+      </div>
+
+      <div class="form-group">
+        <label for="linkUrlInput">URL</label>
+        <input type="url" id="linkUrlInput" placeholder="https://example.com">
+        <div id="linkUrlError" class="link-url-error" style="display:none;">
+          <i class="fas fa-exclamation-circle"></i> Veuillez entrer une URL valide (commençant par http:// ou https://)
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-save" id="saveLinkBtn" onclick="saveLink()">Ajouter</button>
+        <button class="btn-cancel" onclick="closeLinkModal()">Annuler</button>
       </div>
     </div>
   </div>

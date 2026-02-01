@@ -100,14 +100,27 @@ trello-project/
 ### 8. Checklist
 - **Affichage conditionnel** : la section checklist n'apparaît que si on l'ajoute via le menu "+" ou si la carte a déjà des items
 - **Bouton "+"** : présent à gauche du menu "..." dans les headers des modals de création et modification
-  - Menu déroulant avec option "Ajouter une checklist"
-  - Prévu pour d'autres fonctionnalités futures (pièces jointes, liens, etc.)
+  - Menu déroulant avec options "Ajouter une checklist" et "Ajouter un lien"
 - Ajout/suppression d'items
 - Checkbox coché/décoché
 - Historisation de toutes les actions
 
+### 8b. Liens Internet
+- **Affichage conditionnel** : la section liens n'apparaît que si on l'ajoute via le menu "+" ou si la carte a déjà des liens
+- **Accès** : via le menu "+" dans les headers des modals de création et modification
+- **Format** : titre (optionnel) + URL (obligatoire)
+- **Validation d'URL** : vérification automatique que l'URL est valide (http:// ou https://)
+- **Auto-complétion** : ajout automatique de "https://" si aucun protocole n'est spécifié
+- **Titre par défaut** : si aucun titre n'est fourni, l'URL est utilisée comme titre
+- **Actions** :
+  - Édition du titre et de l'URL
+  - Suppression individuelle
+  - Clic sur l'URL pour ouvrir dans un nouvel onglet
+- **Modal dédiée** : formulaire pour ajouter/modifier un lien avec validation en temps réel
+- **Historisation** : toutes les actions (ajout, modification, suppression) sont tracées
+
 ### 9. Historique
-- Log de toutes les actions : création, modifications, checklist, images
+- Log de toutes les actions : création, modifications, checklist, liens, images
 - Affichage avec timestamp localisé (fr-FR)
 
 ### 10. Vue Board vs Map
@@ -201,6 +214,9 @@ let isImageUploading = false; // État de chargement d'image (bloque la soumissi
 let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, address)
 let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET, non persisté)
 let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCard')
+let addCardLinks = [];       // Liens temporaires pour nouvelle carte
+let linkModalMode = null;    // Mode de la modal lien ('addCard' ou 'detail')
+let editingLinkIndex = null; // Index du lien en cours d'édition (null pour nouveau lien)
 ```
 
 ### Fonctions Clés
@@ -258,6 +274,19 @@ let coverImageMode = null;   // Mode de la modal couverture ('detail' ou 'addCar
 | `toggleDetailAddMenu()` | Toggle le menu "+" du modal de détail |
 | `showAddCardChecklist()` | Affiche la section checklist dans le modal d'ajout |
 | `showDetailChecklist()` | Affiche la section checklist dans le modal de détail |
+| `showAddCardLinks()` | Affiche la section liens dans le modal d'ajout |
+| `showDetailLinks()` | Affiche la section liens dans le modal de détail |
+| `openAddCardLinkForm()` | Ouvre le formulaire d'ajout de lien (modal ajout) |
+| `openDetailLinkForm()` | Ouvre le formulaire d'ajout de lien (modal détail) |
+| `openLinkModal()` | Ouvre le modal de création/modification de lien |
+| `closeLinkModal()` | Ferme le modal de lien |
+| `saveLink()` | Sauvegarde le lien (création ou modification) |
+| `renderAddCardLinks()` | Affiche les liens dans le modal d'ajout |
+| `renderDetailLinks(card)` | Affiche les liens dans le modal de détail |
+| `createLinkElement(link, index, mode)` | Crée le DOM d'un lien |
+| `editLink(index, mode)` | Ouvre le modal pour modifier un lien |
+| `deleteLink(index, mode)` | Supprime un lien |
+| `isValidUrl(string)` | Valide qu'une chaîne est une URL valide (http/https) |
 
 ### Constantes de Configuration
 ```javascript
@@ -298,6 +327,7 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
   coverImage: string | null,       // URL ou Base64 de l'image
   coverImageCredit: string | null, // Source (Unsplash, Lien externe, Image importée)
   checklist: [{ text: string, completed: boolean }],
+  links: [{ title: string, url: string }],  // Liens internet
   history: [{ action: string, timestamp: string }],
   createdAt: string
 }
