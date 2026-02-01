@@ -57,7 +57,9 @@ trello-project/
   - Recherche par mots-clés
   - Import depuis fichier
   - Coller un lien externe
-- Mini-carte affichée après sélection d'une adresse
+- Mini-carte affichée après sélection d'une adresse avec **popup cliquable** (identique au modal de détail) :
+  - Affiche le titre de la carte (ou "Nouvelle carte" si non rempli)
+  - Adresse cliquable pour ouvrir Google Maps ou Apple Plans
 
 ### 5. Auto-complétion d'Adresses
 - Debounce 500ms sur la saisie
@@ -74,7 +76,8 @@ trello-project/
 
 ### 6b. Adresses cliquables (Navigation externe)
 - **Dans le modal de détail** : bouton "Ouvrir" à côté de l'adresse (visible si coordonnées disponibles)
-- **Dans les popups des marqueurs** : lien cliquable sur l'adresse (grande carte et mini-carte)
+- **Dans les popups des marqueurs** : lien cliquable sur l'adresse (grande carte, mini-carte détail et mini-carte ajout)
+- **Dans le modal d'ajout** : dès la sélection d'une adresse, le popup du marqueur permet d'ouvrir Google Maps ou Apple Plans
 - **Menu de choix** : modal permettant de choisir entre Google Maps ou Apple Plans
 - **Ouverture native** : sur mobile, ouvre directement l'application Maps si installée
 - **URLs utilisées** (affichent le nom de l'adresse, pas les coordonnées) :
@@ -201,7 +204,7 @@ let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET
 | `renderMapMarkers({ fit, reason })` | Gère les marqueurs de la grande carte |
 | `fitMapToMarkers(animate)` | Calcule et applique fitBounds |
 | `initOrUpdateDetailMiniMap(card)` | Initialise/met à jour la mini-carte détail |
-| `showAddCardMiniMap(lat, lon)` | Affiche la mini-carte dans le modal d'ajout |
+| `showAddCardMiniMap(lat, lon, address)` | Affiche la mini-carte avec popup cliquable dans le modal d'ajout |
 | `renderDetailMiniMarkers(focusedCardId)` | Gère les marqueurs de la mini-carte |
 | `searchAddress(query)` | Auto-complétion modal ajout |
 | `searchDetailAddress(query)` | Auto-complétion modal détail |
