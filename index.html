@@ -30,11 +30,22 @@
         </button>
       </div>
 
+      <div class="filter-indicator" id="filterIndicator" style="display: none;" onclick="openLabelFilterModal()">
+        <i class="fas fa-filter"></i>
+        <span id="filterCount">0</span> filtre(s)
+        <button class="filter-clear-btn" onclick="clearAllFilters(); event.stopPropagation();" title="Supprimer les filtres">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
       <div class="dropdown" id="navbarOptionsDropdown">
         <button class="dropdown-toggle" onclick="toggleNavbarOptionsMenu()">
           <i class="fas fa-ellipsis-h"></i>
         </button>
         <div class="dropdown-menu" id="navbarOptionsMenu">
+          <div class="dropdown-item" onclick="openLabelFilterModal(); closeNavbarOptionsMenu();">
+            <i class="fas fa-filter"></i> Filtrer par étiquettes
+          </div>
           <div class="dropdown-item" onclick="openLabelsManagementModal(); closeNavbarOptionsMenu();">
             <i class="fas fa-tags"></i> Gérer les étiquettes
           </div>
@@ -402,6 +413,39 @@
           <i class="fab fa-apple"></i>
           <span>Apple Plans</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Label Filter Modal -->
+  <div class="modal" id="labelFilterModal">
+    <div class="modal-content filter-modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-filter"></i> Filtrer par étiquettes</h2>
+        <button class="close-modal" onclick="closeLabelFilterModal()">&times;</button>
+      </div>
+
+      <div class="filter-info">
+        <p>Sélectionnez les étiquettes pour filtrer les cartes. Seules les cartes ayant <strong>toutes</strong> les étiquettes sélectionnées seront affichées.</p>
+      </div>
+
+      <!-- Active filters display -->
+      <div class="active-filters-section" id="activeFiltersSection" style="display: none;">
+        <h3>Filtres actifs</h3>
+        <div class="active-filters-list" id="activeFiltersList"></div>
+        <button class="btn btn-secondary" onclick="clearAllFilters()">
+          <i class="fas fa-times"></i> Supprimer tous les filtres
+        </button>
+      </div>
+
+      <!-- Available labels -->
+      <div class="filter-labels-section">
+        <h3>Étiquettes disponibles</h3>
+        <div id="filterLabelsList" class="filter-labels-list"></div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="closeLabelFilterModal()">Fermer</button>
       </div>
     </div>
   </div>

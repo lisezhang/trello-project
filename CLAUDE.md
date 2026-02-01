@@ -139,7 +139,17 @@ trello-project/
 - **Réutilisation globale** : les étiquettes créées sont disponibles pour toutes les cartes
 - **Persistance** : stockage dans `trelloCustomLabels` dans localStorage
 
-### 14. Layout Mobile (Navbar et Listes)
+### 14. Filtrage par Étiquettes
+- **Accès** : via le menu "..." de la navbar > "Filtrer par étiquettes"
+- **Modal dédié** : affiche les étiquettes disponibles et les filtres actifs
+- **Logique ET** : seules les cartes ayant TOUTES les étiquettes sélectionnées sont affichées
+- **Cartes sans étiquettes** : masquées quand un filtre est actif
+- **Application globale** : le filtre s'applique à la fois sur le board (Kanban) et la grande carte (Map)
+- **Indicateur visuel** : badge dans la navbar indiquant le nombre de filtres actifs
+- **Suppression rapide** : bouton "×" sur l'indicateur pour supprimer tous les filtres
+- **Pas de persistance** : les filtres sont réinitialisés au rechargement de la page
+
+### 15. Layout Mobile (Navbar et Listes)
 - **Scroll bloqué au niveau body** : sur mobile, `html` et `body` sont en `position: fixed` avec `overflow: hidden` pour empêcher tout scroll global
 - **Scroll uniquement dans les listes** : seul le `.cards-container` a `overflow-y: auto`, le board lui-même ne scrolle pas verticalement
 - **Navbar compacte à hauteur fixe** : la navbar utilise `height` (pas seulement `min-height`) pour garantir une hauteur stricte
@@ -151,7 +161,7 @@ trello-project/
 - **Listes à hauteur fixe** : `height` au lieu de `max-height` + `min-height: 0` sur `.cards-container` pour le bon fonctionnement du flex overflow
 - **Pas de chevauchement** : le calcul précis des hauteurs et le blocage du scroll global évitent toute superposition
 
-### 15. Upload d'Images Mobile (iOS Safari)
+### 16. Upload d'Images Mobile (iOS Safari)
 - **Validation améliorée des types** : support des formats HEIC/HEIF (iOS), gestion des types MIME vides (fréquent sur iOS)
 - **Extensions supportées** : jpg, jpeg, png, gif, webp, bmp, heic, heif, tiff, tif
 - **Reset de l'input différé** : `input.value = ''` est appelé **après** la lecture complète du fichier (dans `reader.onload`) pour éviter l'invalidation de la référence fichier sur iOS Safari
@@ -176,6 +186,7 @@ let addCardMiniMap = null;   // Instance Leaflet (mini-carte ajout)
 let addCardCoverImage = null; // Image temporaire pour nouvelle carte
 let isImageUploading = false; // État de chargement d'image (bloque la soumission)
 let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, address)
+let activeFilters = [];      // IDs des étiquettes pour le filtrage (logique ET, non persisté)
 ```
 
 ### Fonctions Clés
@@ -213,6 +224,13 @@ let mapsChoiceData = null;   // Données pour le modal de choix Maps (lat, lon, 
 | `closeMapsChoiceModal()` | Ferme le modal de choix Maps |
 | `openInGoogleMaps()` | Ouvre l'adresse dans Google Maps |
 | `openInAppleMaps()` | Ouvre l'adresse dans Apple Plans |
+| `openLabelFilterModal()` | Ouvre le modal de filtrage par étiquettes |
+| `closeLabelFilterModal()` | Ferme le modal de filtrage |
+| `renderLabelFilterModal()` | Affiche les étiquettes et filtres actifs |
+| `toggleFilterLabel(labelId)` | Active/désactive un filtre d'étiquette |
+| `clearAllFilters()` | Supprime tous les filtres actifs |
+| `updateFilterIndicator()` | Met à jour l'indicateur de filtres dans la navbar |
+| `getFilteredCards(cardsList)` | Filtre les cartes selon les étiquettes actives (logique ET) |
 
 ### Constantes de Configuration
 ```javascript
@@ -301,7 +319,8 @@ const PALETTE_COLORS = ['#FF6B6B', '#FFA500', ...]; // 15 couleurs prédéfinies
 
 ### Fonctionnel
 - [ ] Moteur de recherche global (titre, description, labels, adresse)
-- [ ] Filtres (par liste, date d'échéance, label)
+- [x] Filtres par étiquettes (logique ET, avec indicateur visuel)
+- [ ] Filtres avancés (par liste, date d'échéance)
 - [ ] Export / import JSON
 - [ ] Système d'undo/redo
 
